@@ -15,6 +15,7 @@ Root doc: [README](../README.md)
    - Normalize both sources into one schema.
    - Explore words, phrases, object shapes, dates, locations, and source language.
    - Match records with blocking by date/location and weighted similarity.
+   - Use transformer embeddings as the primary text similarity signal when available, with lexical matching as fallback.
    - Export top candidates and a manual validation template.
 
 3. Edwin Drood assignment

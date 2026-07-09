@@ -31,6 +31,8 @@ Current extraction summary: 6 archives, 431 extracted files, 175 files with extr
 
 Important interpretation detail: most PURSUE rows now use extracted document text where filenames could be matched. Metadata-only descriptions remain marked as `metadata_summary` in `data/processed/ufo_unified.csv` and are penalized in matching. Blank location scores in the match CSV mean the official location was missing, non-terrestrial, or too broad to use.
 
+Transformer matching is supported and documented in [GPU transformer run](gpu_transformer_run.md). Embedding caches are stored under `data/processed/embedding_cache/` and can be regenerated safely.
+
 ## Edwin Drood
 
 The script downloads Project Gutenberg eBook 564 from:

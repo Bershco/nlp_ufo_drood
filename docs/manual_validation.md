@@ -12,6 +12,8 @@ outputs/reports/ufo_manual_validation_completed.csv
 
 The candidate CSV contains formula labels for all exported candidates. The completed top-20 review file is generated for the assignment's manual-validation requirement.
 
+When running on a GPU machine with `sentence-transformers` installed, rerun `python -m nlp_ass5.ufo` so `transformer_similarity` is populated and labels are recalculated from the transformer-primary score. If transformer dependencies are unavailable, `transformer_similarity` stays blank and the pipeline uses the lexical fallback.
+
 If reviewing or changing labels by hand, use:
 
 - `manual_label`: `likely same event`, `possibly same event`, or `probably not same event`.

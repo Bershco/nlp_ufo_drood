@@ -9,3 +9,4 @@ data/raw/**/*.txt
 data/manual_raw/
 data/manual_extracted/
 data/manual_text/
+data/processed/embedding_cache/

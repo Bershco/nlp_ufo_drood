@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import os
 import re
 from collections import Counter
 from difflib import SequenceMatcher
@@ -12,13 +13,14 @@ import matplotlib.pyplot as plt
 
 from .common import DATA_PROCESSED, DATA_RAW, FIGURES, REPORTS, STOPWORDS, clean_text, ensure_dirs, save_bar, tokenize, top_terms
 from .manual_docs import compact_name
+from .semantic import SemanticEmbedder, chunk_text
 
 
 PURSUE_MIRROR = "https://raw.githubusercontent.com/DenisSergeevitch/UFO-USA/main/metadata/uap-csv.csv"
 SCHEMA = [
     "source", "record_id", "date", "date_precision", "date_hint_start", "date_hint_end",
     "city", "state", "country", "latitude", "longitude", "location_text",
-    "description_text", "text_kind", "object_shape", "duration", "source_file_or_link",
+    "description_text", "text_kind", "extracted_text_path", "object_shape", "duration", "source_file_or_link",
 ]
 SHAPE_TERMS = ["light", "sphere", "triangle", "disk", "disc", "fireball", "formation", "orb", "cigar", "circle", "oval"]
 ENTITY_TERMS = SHAPE_TERMS + ["military", "base", "aircraft", "weather", "radar", "pilot", "navy", "army", "fbi", "cloud", "missile"]
@@ -85,6 +87,7 @@ def load_kaggle(path: Path = DATA_RAW / "ufo" / "kaggle_ufo.csv") -> pd.DataFram
     out["date_hint_start"] = pd.to_datetime(out["date"], errors="coerce").dt.year
     out["date_hint_end"] = out["date_hint_start"]
     out["text_kind"] = "eyewitness_report"
+    out["extracted_text_path"] = ""
     out["source_file_or_link"] = str(path)
     return out[SCHEMA]
 
@@ -123,6 +126,7 @@ def load_pursue(path: Path = DATA_RAW / "ufo" / "pursue_metadata.csv") -> pd.Dat
     out["latitude"] = np.nan
     out["longitude"] = np.nan
     out["description_text"] = desc
+    out["extracted_text_path"] = ""
     duplicate_counts = out["description_text"].map(out["description_text"].value_counts())
     out["text_kind"] = np.where(duplicate_counts > 1, "metadata_repeated_summary", "metadata_summary")
     out["object_shape"] = out["description_text"].apply(infer_shape)
@@ -189,6 +193,7 @@ def attach_pursue_document_text(pursue: pd.DataFrame) -> pd.DataFrame:
             if text:
                 updated.at[row_idx, "description_text"] = clean_text(text[:20000])
                 updated.at[row_idx, "text_kind"] = "extracted_document_text"
+                updated.at[row_idx, "extracted_text_path"] = best.get("text_path", "")
                 if not clean_text(updated.at[row_idx, "location_text"]):
                     updated.at[row_idx, "location_text"] = infer_location_from_text(text)
     return updated
@@ -258,6 +263,85 @@ def candidate_snippet(document_text: str, query_text: str, max_chars: int = 450)
             best_idx = idx
     snippet = " ".join(windows[max(0, best_idx - 1): best_idx + 2])
     return snippet[:max_chars]
+
+
+def full_text_for_embedding(row: pd.Series) -> str:
+    path_value = row.get("extracted_text_path", "")
+    if isinstance(path_value, str) and path_value:
+        try:
+            text = read_extracted_text(path_value)
+            if text:
+                return text
+        except Exception:
+            pass
+    return str(row.get("description_text", ""))
+
+
+def prepare_semantic_context(kaggle: pd.DataFrame, pursue: pd.DataFrame) -> dict:
+    enabled = str(os.environ.get("UFO_USE_TRANSFORMERS", "1")).lower() not in {"0", "false", "no"}
+    context = {"available": False, "error": ""}
+    if not enabled:
+        context["error"] = "UFO_USE_TRANSFORMERS disabled"
+        return context
+
+    embedder = SemanticEmbedder()
+    if not embedder.available:
+        context["error"] = embedder.error
+        return context
+
+    kaggle_ids = kaggle.index.astype(str).tolist()
+    kaggle_texts = kaggle["description_text"].fillna("").astype(str).tolist()
+    kaggle_encoded = embedder.encode_cached("kaggle_descriptions", kaggle_ids, kaggle_texts)
+    kaggle_pos = {int(item_id): pos for pos, item_id in enumerate(kaggle_encoded.ids)}
+
+    chunk_ids: list[str] = []
+    chunk_texts: list[str] = []
+    pursue_chunk_positions: dict[int, list[int]] = {}
+    for row_idx, row in pursue.iterrows():
+        text = full_text_for_embedding(row)
+        chunks = chunk_text(text)
+        if not chunks:
+            chunks = [str(row.get("description_text", ""))]
+        positions: list[int] = []
+        for chunk_no, chunk in enumerate(chunks):
+            positions.append(len(chunk_ids))
+            chunk_ids.append(f"{row_idx}:{chunk_no}")
+            chunk_texts.append(chunk)
+        pursue_chunk_positions[int(row_idx)] = positions
+    chunk_encoded = embedder.encode_cached("pursue_chunks", chunk_ids, chunk_texts)
+
+    return {
+        "available": True,
+        "error": "",
+        "model_name": embedder.model_name,
+        "kaggle_embeddings": kaggle_encoded.embeddings,
+        "kaggle_pos": kaggle_pos,
+        "pursue_embeddings": chunk_encoded.embeddings,
+        "pursue_chunk_texts": chunk_encoded.texts,
+        "pursue_chunk_positions": pursue_chunk_positions,
+    }
+
+
+def semantic_block_scores(context: dict, block_indices: list[int], pursue_idx: int) -> tuple[dict[int, float], dict[int, str]]:
+    if not context.get("available") or not block_indices:
+        return {}, {}
+    k_positions = [context["kaggle_pos"][int(idx)] for idx in block_indices if int(idx) in context["kaggle_pos"]]
+    valid_indices = [int(idx) for idx in block_indices if int(idx) in context["kaggle_pos"]]
+    p_positions = context["pursue_chunk_positions"].get(int(pursue_idx), [])
+    if not k_positions or not p_positions:
+        return {}, {}
+    k_matrix = context["kaggle_embeddings"][k_positions]
+    p_matrix = context["pursue_embeddings"][p_positions]
+    score_matrix = np.maximum(k_matrix @ p_matrix.T, 0.0)
+    best_chunk_offsets = score_matrix.argmax(axis=1)
+    best_scores = score_matrix.max(axis=1)
+    scores: dict[int, float] = {}
+    snippets: dict[int, str] = {}
+    for idx, score, chunk_offset in zip(valid_indices, best_scores, best_chunk_offsets):
+        chunk_position = p_positions[int(chunk_offset)]
+        scores[idx] = float(score)
+        snippets[idx] = context["pursue_chunk_texts"][chunk_position][:450]
+    return scores, snippets
 
 
 LIKELY_SHARE = 0.03
@@ -449,14 +533,31 @@ def date_or_range_similarity(k_date: str, p_date: str, p_precision: str, p_year_
     return 0.0
 
 
-def weighted_score(text_score: float, location_score: float, date_score: float, entity_score: float, text_kind: str) -> tuple[float, str]:
-    components = [
-        ("text", text_score, 0.35),
-        ("date", date_score, 0.25),
-        ("entity", entity_score, 0.15),
-    ]
+def weighted_score(
+    transformer_score: float,
+    lexical_score: float,
+    location_score: float,
+    date_score: float,
+    entity_score: float,
+    text_kind: str,
+) -> tuple[float, str]:
+    if pd.notna(transformer_score):
+        components = [
+            ("transformer_text", transformer_score, 0.40),
+            ("lexical_text", lexical_score, 0.15),
+            ("date", date_score, 0.25),
+            ("entity", entity_score, 0.10),
+        ]
+        location_weight = 0.10
+    else:
+        components = [
+            ("lexical_text", lexical_score, 0.35),
+            ("date", date_score, 0.25),
+            ("entity", entity_score, 0.15),
+        ]
+        location_weight = 0.25
     if pd.notna(location_score):
-        components.append(("location", location_score, 0.25))
+        components.append(("location", location_score, location_weight))
     available = [(name, score, weight) for name, score, weight in components if pd.notna(score)]
     if not available:
         return (0.0, "No reliable scoring signals.")
@@ -494,7 +595,8 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
             "pursue_date_precision", "pursue_date_hint_start", "pursue_date_hint_end",
             "kaggle_location", "pursue_location", "kaggle_text", "pursue_text",
             "pursue_text_kind",
-            "text_similarity", "location_similarity", "date_similarity",
+            "transformer_similarity", "lexical_text_similarity", "text_similarity",
+            "location_similarity", "date_similarity",
             "entity_similarity", "final_score", "match_explanation",
             "manual_label", "manual_notes",
         ])
@@ -508,6 +610,7 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
     pursue["year"] = pd.to_datetime(pursue["date"], errors="coerce").dt.year
     pursue["tokens"] = pursue["description_text"].map(token_set)
     pursue["entities"] = pursue["description_text"].map(entity_set)
+    semantic_context = prepare_semantic_context(kaggle, pursue)
     year_ranges = pursue.apply(
         lambda r: years_in_text(r.get("date", ""), r.get("record_id", ""), r.get("description_text", "")),
         axis=1,
@@ -528,6 +631,8 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
             block = block[block["entities"].map(lambda ents: bool(ents & p["entities"]))]
         if len(block) > 3000:
             block = block.sample(3000, random_state=7)
+        block_indices = [int(idx) for idx in block.index]
+        semantic_scores, semantic_snippets = semantic_block_scores(semantic_context, block_indices, int(p.name))
 
         cheap_candidates = []
         for idx, k in block.iterrows():
@@ -535,17 +640,22 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
             txt_cheap = jaccard(k["tokens"], p["tokens"])
             dat_cheap = date_or_range_similarity(k["date"], p["date"], p["date_precision"], p["year_min"], p["year_max"])
             dat_for_rank = 0.0 if pd.isna(dat_cheap) else dat_cheap
-            cheap = 0.55 * txt_cheap + 0.25 * ent + 0.20 * dat_for_rank
+            sem_for_rank = semantic_scores.get(int(idx), 0.0)
+            if semantic_context.get("available"):
+                cheap = 0.55 * sem_for_rank + 0.15 * txt_cheap + 0.15 * ent + 0.15 * dat_for_rank
+            else:
+                cheap = 0.55 * txt_cheap + 0.25 * ent + 0.20 * dat_for_rank
             if cheap >= 0.025:
                 cheap_candidates.append((cheap, idx))
         for _, idx in sorted(cheap_candidates, reverse=True)[:40]:
             k = kaggle.loc[idx]
-            p_snippet = candidate_snippet(p["description_text"], k["description_text"])
+            transformer_score = semantic_scores.get(int(idx), np.nan)
+            p_snippet = semantic_snippets.get(int(idx)) or candidate_snippet(p["description_text"], k["description_text"])
             ent = jaccard(k["entities"], p["entities"])
             dat = date_or_range_similarity(k["date"], p["date"], p["date_precision"], p["year_min"], p["year_max"])
-            txt = text_similarity(k["description_text"], p_snippet)
+            lexical = text_similarity(k["description_text"], p_snippet)
             loc = location_similarity(k, p)
-            final, scoring_notes = weighted_score(txt, loc, dat, ent, p["text_kind"])
+            final, scoring_notes = weighted_score(transformer_score, lexical, loc, dat, ent, p["text_kind"])
             if final >= 0.25:
                 rows.append({
                     "kaggle_record_id": k["record_id"],
@@ -560,7 +670,9 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                     "kaggle_text": k["description_text"][:350],
                     "pursue_text": p_snippet,
                     "pursue_text_kind": p["text_kind"],
-                    "text_similarity": round(txt, 4),
+                    "transformer_similarity": "" if pd.isna(transformer_score) else round(transformer_score, 4),
+                    "lexical_text_similarity": round(lexical, 4),
+                    "text_similarity": round(transformer_score, 4) if pd.notna(transformer_score) else round(lexical, 4),
                     "location_similarity": "" if pd.isna(loc) else round(loc, 4),
                     "date_similarity": "" if pd.isna(dat) else round(dat, 4),
                     "entity_similarity": round(ent, 4),
@@ -658,17 +770,23 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
     all_validation = matches if not matches.empty and "manual_label" in matches else pd.DataFrame()
     label_counts = validation["manual_label"].value_counts().to_dict() if not validation.empty else {}
     all_label_counts = all_validation["manual_label"].value_counts().to_dict() if not all_validation.empty else {}
+    transformer_active = (
+        not matches.empty
+        and "transformer_similarity" in matches
+        and pd.to_numeric(matches["transformer_similarity"], errors="coerce").notna().any()
+    )
     lines = [
         "# UFO/UAP Report Draft",
         "",
         f"Unified records loaded: {len(df)}.",
         f"Kaggle records: {len(df[df['source'] == 'kaggle'])}. PURSUE records: {len(df[df['source'] == 'pursue'])}.",
         f"PURSUE rows with extracted document text: {extracted_count}. Metadata-only PURSUE rows: {metadata_count}.",
+        f"Transformer similarity active for this run: {transformer_active}.",
         "",
         "## Matching Method",
         "Candidate pairs are blocked by incident year or inferred year range where possible.",
         "",
-        "The base signals are text, date, location, and entity/keyword overlap. The score is normalized over reliable available signals. Location is ignored when the PURSUE location is missing, non-terrestrial, or too broad. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.",
+        "The base signals are transformer text similarity, lexical text similarity, date, location, and entity/keyword overlap. When `sentence-transformers` is installed, transformer cosine similarity is the primary text signal and lexical overlap is secondary. If the transformer dependency is unavailable, the pipeline falls back to lexical text similarity. The score is normalized over reliable available signals. Location is ignored when the PURSUE location is missing, non-terrestrial, or too broad. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.",
         "",
         "Date similarity is based on absolute day distance, so cross-year near misses such as December 31 versus January 2 are still treated as close. Full-date gaps use tiers from exact day through 365 days; year-only official dates use a weaker same-year/plus-minus-one-year fallback.",
         "",
@@ -716,6 +834,8 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "",
         "## Data Interpretation Notes",
         "- `pursue_text` in the candidate CSV is a relevant extracted-document snippet when available; otherwise it is a metadata snippet.",
+        "- `transformer_similarity` is cosine similarity between the Kaggle report and the best official document chunk when embeddings are available.",
+        "- `lexical_text_similarity` is the older token/string overlap score and remains useful as a secondary/fallback signal.",
         "- `pursue_text_kind=metadata_summary` means the official file could not be matched to extracted text and should be treated as weaker evidence.",
         "- `pursue_date_precision` distinguishes exact dates from year-only or missing dates.",
         "- Blank `location_similarity` means location was deliberately ignored rather than scored as a real match.",

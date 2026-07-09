@@ -44,6 +44,7 @@ Start here and follow links:
 - [Data notes](docs/data_notes.md)
 - [Manual validation guide](docs/manual_validation.md)
 - [Ambiguities and decisions](docs/ambiguities.md)
+- [GPU transformer run guide](docs/gpu_transformer_run.md)
 - [Final summary](docs/summary.md)
 
 ## Repository Status
