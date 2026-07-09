@@ -40,14 +40,14 @@ def load_kaggle(path: Path = DATA_RAW / "ufo" / "kaggle_ufo.csv") -> pd.DataFram
     cols = {
         "date": first_existing_column(df, ["datetime", "date", "Date_time"]),
         "city": first_existing_column(df, ["city"]),
-        "state": first_existing_column(df, ["state"]),
+        "state": first_existing_column(df, ["state", "state/province"]),
         "country": first_existing_column(df, ["country"]),
         "latitude": first_existing_column(df, ["latitude"]),
         "longitude": first_existing_column(df, ["longitude"]),
         "location_text": first_existing_column(df, ["location", "city"]),
         "description_text": first_existing_column(df, ["comments", "description", "text"]),
-        "object_shape": first_existing_column(df, ["shape"]),
-        "duration": first_existing_column(df, ["duration (seconds)", "duration", "duration (hours/min)"]),
+        "object_shape": first_existing_column(df, ["shape", "UFO_shape"]),
+        "duration": first_existing_column(df, ["duration (seconds)", "duration", "duration (hours/min)", "described_duration_of_encounter", "length_of_encounter_seconds"]),
     }
     out = pd.DataFrame(index=df.index)
     out["record_id"] = df.index.astype(str)
@@ -170,6 +170,44 @@ def entity_similarity(a: str, b: str) -> float:
     return len(ea & eb) / len(ea | eb)
 
 
+def jaccard(a: set[str], b: set[str]) -> float:
+    if not a or not b:
+        return 0.0
+    return len(a & b) / len(a | b)
+
+
+def token_set(text: str) -> set[str]:
+    return {t for t in tokenize(text) if t not in STOPWORDS and len(t) > 2}
+
+
+def entity_set(text: str) -> set[str]:
+    return set(tokenize(text)) & set(ENTITY_TERMS)
+
+
+def date_or_range_similarity(k_date: str, p_date: str, p_year_min: float, p_year_max: float) -> float:
+    direct = date_similarity(k_date, p_date)
+    if direct > 0.1:
+        return direct
+    k_year = pd.to_datetime(k_date, errors="coerce").year
+    if pd.isna(k_year) or pd.isna(p_year_min) or pd.isna(p_year_max):
+        return direct
+    if p_year_min <= k_year <= p_year_max:
+        return 0.25
+    if p_year_min - 1 <= k_year <= p_year_max + 1:
+        return 0.15
+    return 0.0
+
+
+def years_in_text(*texts: str) -> tuple[float, float]:
+    years: list[int] = []
+    for text in texts:
+        for match in re.findall(r"\b(19[4-9]\d|20[0-2]\d)\b", str(text)):
+            years.append(int(match))
+    if not years:
+        return (np.nan, np.nan)
+    return (min(years), max(years))
+
+
 def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
     kaggle = df[df["source"] == "kaggle"].copy()
     pursue = df[df["source"] == "pursue"].copy()
@@ -186,16 +224,46 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
     rows = []
     kaggle["year"] = pd.to_datetime(kaggle["date"], errors="coerce").dt.year
+    kaggle["tokens"] = kaggle["description_text"].map(token_set)
+    kaggle["entities"] = kaggle["description_text"].map(entity_set)
     pursue["year"] = pd.to_datetime(pursue["date"], errors="coerce").dt.year
-    for _, k in kaggle.iterrows():
-        block = pursue[(pursue["year"].isna()) | (k["year"] == pursue["year"]) | (abs(k["year"] - pursue["year"]) <= 1)]
-        if len(block) > 500:
-            block = block.sample(500, random_state=7)
-        for _, p in block.iterrows():
+    pursue["tokens"] = pursue["description_text"].map(token_set)
+    pursue["entities"] = pursue["description_text"].map(entity_set)
+    year_ranges = pursue.apply(
+        lambda r: years_in_text(r.get("date", ""), r.get("record_id", ""), r.get("description_text", "")),
+        axis=1,
+        result_type="expand",
+    )
+    pursue["year_min"] = year_ranges[0]
+    pursue["year_max"] = year_ranges[1]
+    for _, p in pursue.iterrows():
+        if pd.notna(p["year"]):
+            block = kaggle[abs(kaggle["year"] - p["year"]) <= 1]
+        elif pd.notna(p["year_min"]) and pd.notna(p["year_max"]):
+            block = kaggle[(p["year_min"] - 1 <= kaggle["year"]) & (kaggle["year"] <= p["year_max"] + 1)]
+        else:
+            block = kaggle
+        if block.empty:
+            continue
+        if p["entities"] and len(block) > 5000:
+            block = block[block["entities"].map(lambda ents: bool(ents & p["entities"]))]
+        if len(block) > 3000:
+            block = block.sample(3000, random_state=7)
+
+        cheap_candidates = []
+        for idx, k in block.iterrows():
+            ent = jaccard(k["entities"], p["entities"])
+            txt_cheap = jaccard(k["tokens"], p["tokens"])
+            dat_cheap = date_or_range_similarity(k["date"], p["date"], p["year_min"], p["year_max"])
+            cheap = 0.55 * txt_cheap + 0.25 * ent + 0.20 * dat_cheap
+            if cheap >= 0.025:
+                cheap_candidates.append((cheap, idx))
+        for _, idx in sorted(cheap_candidates, reverse=True)[:40]:
+            k = kaggle.loc[idx]
+            ent = jaccard(k["entities"], p["entities"])
+            dat = date_or_range_similarity(k["date"], p["date"], p["year_min"], p["year_max"])
             txt = text_similarity(k["description_text"], p["description_text"])
             loc = location_similarity(k, p)
-            dat = date_similarity(k["date"], p["date"])
-            ent = entity_similarity(k["description_text"], p["description_text"])
             final = 0.35 * txt + 0.25 * loc + 0.25 * dat + 0.15 * ent
             if final >= 0.25:
                 rows.append({

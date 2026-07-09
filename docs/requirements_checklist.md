@@ -13,7 +13,7 @@ Root doc: [README](../README.md)
 - [x] Candidate match export implemented.
 - [x] Manual validation template implemented.
 - [x] Visualization hooks implemented.
-- [ ] Full run requires the Kaggle CSV and reachable PURSUE data.
+- [x] Full run completed with local Kaggle CSV and PURSUE metadata mirror.
 
 ## Assignment 2: Edwin Drood
 

@@ -4,7 +4,7 @@ Root doc: [README](../README.md)
 
 ## UFO/UAP
 
-Kaggle datasets usually require an authenticated download. Place the downloaded sightings CSV at:
+Kaggle datasets usually require an authenticated download. The local zip `ufo_data.zip` has been extracted to:
 
 ```text
 data/raw/ufo/kaggle_ufo.csv
@@ -16,7 +16,7 @@ PURSUE data can be loaded from:
 data/raw/ufo/pursue_metadata.csv
 ```
 
-If no local PURSUE CSV is present, the script tries a public metadata mirror that preserves links to the official `war.gov` files. The official `war.gov` shell endpoint returned HTTP 403 during setup, so this fallback is documented rather than hidden.
+If no local PURSUE CSV is present, the script tries a public metadata mirror that preserves links to the official `war.gov` files. The official `war.gov` shell endpoint returned HTTP 403 during setup, so this fallback is documented rather than hidden. Optional PDF text extraction can be added if official files are downloaded locally, but the current implementation uses the metadata descriptions and source links.
 
 ## Edwin Drood
 

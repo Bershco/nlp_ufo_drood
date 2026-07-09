@@ -3,5 +3,6 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 data/raw/ufo/kaggle_ufo.csv
+ufo_data.zip
 data/raw/**/*.pdf
 data/raw/**/*.txt

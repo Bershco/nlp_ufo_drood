@@ -23,13 +23,14 @@ Outputs are written to:
 - UFO/UAP pipeline: unified schema, NLP exploration, blocking-based matching, weighted scoring, and manual-validation template.
 - Edwin Drood pipeline: text preparation, character analysis, suspect scoring, clue extraction, Dickens comparison hooks, visualizations, and generated report.
 
-Kaggle normally requires credentials. Download the UFO dataset from Kaggle and place its CSV at:
+Kaggle normally requires credentials. In this workspace the zip has been extracted to the expected local CSV path:
 
 ```text
 data/raw/ufo/kaggle_ufo.csv
 ```
 
 The PURSUE collector uses the official schema when available and can also ingest a local CSV mirror.
+The current run uses PURSUE metadata records. If you obtain an official PURSUE CSV export, place it at `data/raw/ufo/pursue_metadata.csv`.
 
 For Colab-style submission, open [notebooks/assignment_pipeline.ipynb](notebooks/assignment_pipeline.ipynb).
 
