@@ -3,12 +3,14 @@
 Unified records loaded: 80494.
 Kaggle records: 80332. PURSUE records: 162.
 PURSUE rows with extracted document text: 138. Metadata-only PURSUE rows: 24.
-Transformer similarity active for this run: False.
+Transformer similarity active for this run: True.
 
 ## Matching Method
 Candidate pairs are blocked by incident year or inferred year range where possible.
 
 The base signals are transformer text similarity, lexical text similarity, date, location, and entity/keyword overlap. When `sentence-transformers` is installed, transformer cosine similarity is the primary text signal and lexical overlap is secondary. If the transformer dependency is unavailable, the pipeline falls back to lexical text similarity. The score is normalized over reliable available signals. Location is ignored when the PURSUE location is missing, non-terrestrial, or too broad. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.
+
+Rows with empty Kaggle text or empty official snippets are excluded from semantic candidate matching so identical empty embeddings cannot create false high-similarity pairs.
 
 Date similarity is based on absolute day distance, so cross-year near misses such as December 31 versus January 2 are still treated as close. Full-date gaps use tiers from exact day through 365 days; year-only official dates use a weaker same-year/plus-minus-one-year fallback.
 
@@ -17,9 +19,9 @@ Validation labels are relative rank bands over the exported candidate pool: top 
 ## Candidate Matches
 Candidate matches are exported to `outputs/reports/ufo_candidate_matches.csv`.
 All exported candidates include formula labels and notes.
-Validation labels among all exported candidates: {'probably not same event': 216, 'possibly same event': 106, 'likely same event': 10}.
+Validation labels among all exported candidates: {'probably not same event': 287, 'possibly same event': 141, 'likely same event': 13}.
 The top-20 LLM-assisted manual review is `outputs/reports/ufo_manual_validation_completed.csv`.
-Validation labels among top 20: {'likely same event': 10, 'possibly same event': 10}.
+Validation labels among top 20: {'likely same event': 13, 'possibly same event': 7}.
 
 ## Exploration Outputs
 - Common terms: `data/processed/ufo_top_terms.csv`.
@@ -31,11 +33,11 @@ Validation labels among top 20: {'likely same event': 10, 'possibly same event':
 - Rare sightings: `data/processed/ufo_rare_sightings.csv`.
 
 ## Validation Examples
-- `possibly same event`: Kaggle `74332` vs PURSUE `State Department UAP Cable 5, Mexico, September 16, 2003`. Reason: next 32% of exported candidates by final score; uses extracted official document text; date is exact or within a few days; score percentile 0.970; direct text similarity is low
-- `possibly same event`: Kaggle `73873` vs PURSUE `State Department UAP Cable 5, Mexico, September 16, 2003`. Reason: next 32% of exported candidates by final score; uses extracted official document text; date is exact or within a few days; score percentile 0.967; direct text similarity is low
-- `possibly same event`: Kaggle `45969` vs PURSUE `38_143685_box_Incident_Summaries_173-233`. Reason: next 32% of exported candidates by final score; uses extracted official document text; entity/keyword overlap is meaningful; score percentile 0.964; official date is missing or only inferred; official location was not usable
-- `likely same event`: Kaggle `59561` vs PURSUE `59_64634_711.5612[7-2852`. Reason: top 3% of exported candidates by final score; uses extracted official document text; date is in a moderately close window; entity/keyword overlap is meaningful; score percentile 1.000; official location was not usable; direct text similarity is low
-- `likely same event`: Kaggle `72778` vs PURSUE `DOW-UAP-D48, Department of the Air Force Report, 1996`. Reason: top 3% of exported candidates by final score; uses extracted official document text; date is exact or within a few days; score percentile 0.997; official location was not usable; direct text similarity is low
+- `possibly same event`: Kaggle `22169` vs PURSUE `State Department UAP Cable 2, Kazakhstan, January 31, 1994`. Reason: next 32% of exported candidates by final score; uses extracted official document text; date is exact or within a few days; score percentile 0.971
+- `possibly same event`: Kaggle `2884` vs PURSUE `38_143685_box_Incident_Summaries_173-233`. Reason: next 32% of exported candidates by final score; uses extracted official document text; entity/keyword overlap is meaningful; score percentile 0.968; official date is missing or only inferred; official location was not usable
+- `possibly same event`: Kaggle `26836` vs PURSUE `38_143685_box_Incident_Summaries_173-233`. Reason: next 32% of exported candidates by final score; uses extracted official document text; entity/keyword overlap is meaningful; score percentile 0.966; official date is missing or only inferred; official location was not usable
+- `likely same event`: Kaggle `48573` vs PURSUE `18_6369445_General_1948_Vol_1`. Reason: top 3% of exported candidates by final score; uses extracted official document text; date is exact or within a few days; score percentile 1.000; official location was not usable
+- `likely same event`: Kaggle `14902` vs PURSUE `38_143685_box_Incident_Summaries_173-233`. Reason: top 3% of exported candidates by final score; uses extracted official document text; entity/keyword overlap is meaningful; score percentile 0.998; official date is missing or only inferred; official location was not usable
 
 ## Conclusions
 The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Date proximity and entity overlap are the most useful automated signals; location is only useful when the official location is specific and terrestrial.
@@ -51,5 +53,6 @@ The strongest candidates are useful leads, but most are not strong enough to cla
 ## Limitations
 - Some extracted official records describe file collections, launch summaries, or long historical reports rather than single events.
 - OCR quality varies across scanned PDFs; some downloaded files were videos or malformed/unsupported documents.
+- Transformer similarity can surface semantically broad matches from long official reports, so date/entity/location support and manual validation remain important.
 - The candidate list is a triage artifact for manual validation, not a final claim that the events match.
 - Keyword entities are transparent but weaker than a full NER or sentence-embedding pipeline.

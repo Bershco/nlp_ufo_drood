@@ -277,6 +277,11 @@ def full_text_for_embedding(row: pd.Series) -> str:
     return str(row.get("description_text", ""))
 
 
+def has_usable_text(value: object) -> bool:
+    text = clean_text(value).lower()
+    return bool(text) and text not in {"nan", "none", "n/a", "na"}
+
+
 def prepare_semantic_context(kaggle: pd.DataFrame, pursue: pd.DataFrame) -> dict:
     enabled = str(os.environ.get("UFO_USE_TRANSFORMERS", "1")).lower() not in {"0", "false", "no"}
     context = {"available": False, "error": ""}
@@ -289,8 +294,9 @@ def prepare_semantic_context(kaggle: pd.DataFrame, pursue: pd.DataFrame) -> dict
         context["error"] = embedder.error
         return context
 
-    kaggle_ids = kaggle.index.astype(str).tolist()
-    kaggle_texts = kaggle["description_text"].fillna("").astype(str).tolist()
+    usable_kaggle = kaggle[kaggle["description_text"].map(has_usable_text)]
+    kaggle_ids = usable_kaggle.index.astype(str).tolist()
+    kaggle_texts = usable_kaggle["description_text"].fillna("").astype(str).tolist()
     kaggle_encoded = embedder.encode_cached("kaggle_descriptions", kaggle_ids, kaggle_texts)
     kaggle_pos = {int(item_id): pos for pos, item_id in enumerate(kaggle_encoded.ids)}
 
@@ -300,8 +306,11 @@ def prepare_semantic_context(kaggle: pd.DataFrame, pursue: pd.DataFrame) -> dict
     for row_idx, row in pursue.iterrows():
         text = full_text_for_embedding(row)
         chunks = chunk_text(text)
-        if not chunks:
+        if not chunks and has_usable_text(row.get("description_text", "")):
             chunks = [str(row.get("description_text", ""))]
+        if not chunks:
+            pursue_chunk_positions[int(row_idx)] = []
+            continue
         positions: list[int] = []
         for chunk_no, chunk in enumerate(chunks):
             positions.append(len(chunk_ids))
@@ -604,6 +613,8 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
         empty.to_csv(REPORTS / "ufo_manual_validation_template.csv", index=False)
         return pd.DataFrame()
     rows = []
+    kaggle = kaggle[kaggle["description_text"].map(has_usable_text)].copy()
+    pursue = pursue[pursue["description_text"].map(has_usable_text)].copy()
     kaggle["year"] = pd.to_datetime(kaggle["date"], errors="coerce").dt.year
     kaggle["tokens"] = kaggle["description_text"].map(token_set)
     kaggle["entities"] = kaggle["description_text"].map(entity_set)
@@ -788,6 +799,8 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "",
         "The base signals are transformer text similarity, lexical text similarity, date, location, and entity/keyword overlap. When `sentence-transformers` is installed, transformer cosine similarity is the primary text signal and lexical overlap is secondary. If the transformer dependency is unavailable, the pipeline falls back to lexical text similarity. The score is normalized over reliable available signals. Location is ignored when the PURSUE location is missing, non-terrestrial, or too broad. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.",
         "",
+        "Rows with empty Kaggle text or empty official snippets are excluded from semantic candidate matching so identical empty embeddings cannot create false high-similarity pairs.",
+        "",
         "Date similarity is based on absolute day distance, so cross-year near misses such as December 31 versus January 2 are still treated as close. Full-date gaps use tiers from exact day through 365 days; year-only official dates use a weaker same-year/plus-minus-one-year fallback.",
         "",
         f"Validation labels are relative rank bands over the exported candidate pool: top {LIKELY_SHARE:.0%} `likely same event`, next {POSSIBLE_SHARE:.0%} `possibly same event`, and the remainder `probably not same event`. These labels do not mean confirmed identity.",
@@ -843,6 +856,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "## Limitations",
         "- Some extracted official records describe file collections, launch summaries, or long historical reports rather than single events.",
         "- OCR quality varies across scanned PDFs; some downloaded files were videos or malformed/unsupported documents.",
+        "- Transformer similarity can surface semantically broad matches from long official reports, so date/entity/location support and manual validation remain important.",
         "- The candidate list is a triage artifact for manual validation, not a final claim that the events match.",
         "- Keyword entities are transparent but weaker than a full NER or sentence-embedding pipeline.",
     ])
