@@ -1,0 +1,34 @@
+# Data Notes
+
+Root doc: [README](../README.md)
+
+## UFO/UAP
+
+Kaggle datasets usually require an authenticated download. Place the downloaded sightings CSV at:
+
+```text
+data/raw/ufo/kaggle_ufo.csv
+```
+
+PURSUE data can be loaded from:
+
+```text
+data/raw/ufo/pursue_metadata.csv
+```
+
+If no local PURSUE CSV is present, the script tries a public metadata mirror that preserves links to the official `war.gov` files. The official `war.gov` shell endpoint returned HTTP 403 during setup, so this fallback is documented rather than hidden.
+
+## Edwin Drood
+
+The script downloads Project Gutenberg eBook 564 from:
+
+```text
+https://www.gutenberg.org/files/564/564-0.txt
+```
+
+For Dickens comparison, the default earlier work is Great Expectations, Project Gutenberg eBook 1400. More works can be added through the same helper.
+
+## Related Docs
+
+- [Project plan](plan.md)
+- [Ambiguities](ambiguities.md)

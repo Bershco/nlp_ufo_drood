@@ -1,0 +1,49 @@
+# NLP Assignment 5: UFO/UAP and Edwin Drood
+
+This repository contains a compact, reproducible solution scaffold for the two NLP assignments in `nlp_assignments_ufo_edwin_drood.pdf`.
+
+## Quick Start
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m nlp_ass5.run_all
+```
+
+Outputs are written to:
+
+- `data/raw/` for downloaded or manually supplied source files.
+- `data/processed/` for structured CSV tables.
+- `outputs/figures/` for visualizations.
+- `outputs/reports/` for generated markdown/CSV summaries.
+
+## Assignment Coverage
+
+- UFO/UAP pipeline: unified schema, NLP exploration, blocking-based matching, weighted scoring, and manual-validation template.
+- Edwin Drood pipeline: text preparation, character analysis, suspect scoring, clue extraction, Dickens comparison hooks, visualizations, and generated report.
+
+Kaggle normally requires credentials. Download the UFO dataset from Kaggle and place its CSV at:
+
+```text
+data/raw/ufo/kaggle_ufo.csv
+```
+
+The PURSUE collector uses the official schema when available and can also ingest a local CSV mirror.
+
+For Colab-style submission, open [notebooks/assignment_pipeline.ipynb](notebooks/assignment_pipeline.ipynb).
+
+## Documentation Graph
+
+Start here and follow links:
+
+- [Project plan](docs/plan.md)
+- [Assignment requirements checklist](docs/requirements_checklist.md)
+- [Data notes](docs/data_notes.md)
+- [Manual validation guide](docs/manual_validation.md)
+- [Ambiguities and decisions](docs/ambiguities.md)
+- [Final summary](docs/summary.md)
+
+## Repository Status
+
+This is a local git repository initialized for later GitHub remote setup.

@@ -1,0 +1,1 @@
+kaggle_record_id,pursue_record_id,kaggle_date,pursue_date,kaggle_location,pursue_location,kaggle_text,pursue_text,text_similarity,location_similarity,date_similarity,entity_similarity,final_score,match_explanation,manual_label,manual_notes

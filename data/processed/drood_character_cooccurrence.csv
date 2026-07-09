@@ -1,0 +1,19 @@
+character_a,character_b,weight
+John Jasper,Mr. Crisparkle,3
+Edwin Drood,John Jasper,7
+Edwin Drood,Rosa Bud,8
+Durdles,John Jasper,11
+Helena Landless,Neville Landless,16
+Helena Landless,Mr. Crisparkle,6
+John Jasper,Rosa Bud,4
+Helena Landless,John Jasper,1
+Edwin Drood,Mr. Crisparkle,4
+Edwin Drood,Neville Landless,11
+Mr. Crisparkle,Neville Landless,12
+Neville Landless,Rosa Bud,3
+Edwin Drood,Helena Landless,2
+John Jasper,Neville Landless,14
+Helena Landless,Rosa Bud,9
+Dick Datchery,Durdles,1
+Mr. Crisparkle,Rosa Bud,8
+Dick Datchery,Princess Puffer,1
