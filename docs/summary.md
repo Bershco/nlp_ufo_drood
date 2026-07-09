@@ -13,7 +13,7 @@ Drood is fully public and runs immediately after dependencies are installed. UFO
 Next steps before submission:
 
 1. Run `python -m nlp_ass5.run_all`.
-2. Fill the manual validation labels for the top 20 UFO candidates.
+2. Review the generated validation labels if you want to override any judgment calls.
 3. Convert generated markdown/figures into the requested short report or Colab.
 
 ## Related Docs

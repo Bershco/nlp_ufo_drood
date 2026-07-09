@@ -267,9 +267,13 @@ def validation_label(row: pd.Series) -> tuple[str, str]:
     date = pd.to_numeric(row.get("date_similarity", np.nan), errors="coerce")
     loc = pd.to_numeric(row.get("location_similarity", np.nan), errors="coerce")
     text_kind = str(row.get("pursue_text_kind", ""))
+    percentile = pd.to_numeric(row.get("score_percentile", 0), errors="coerce")
+    rank = pd.to_numeric(row.get("candidate_rank", np.nan), errors="coerce")
 
     weak_reasons = []
     strong_reasons = []
+    if pd.notna(rank) and percentile >= 0.95:
+        strong_reasons.append("top-ranked candidate relative to exported matches")
     if text_kind == "extracted_document_text":
         strong_reasons.append("uses extracted official document text")
     if pd.notna(date) and date >= 0.9:
@@ -289,14 +293,32 @@ def validation_label(row: pd.Series) -> tuple[str, str]:
     if entity >= 0.5:
         strong_reasons.append("entity/keyword overlap is meaningful")
 
-    if score >= 0.50 and text >= 0.15 and pd.notna(date) and date >= 0.82 and (pd.notna(loc) or entity >= 0.5):
+    has_close_date = pd.notna(date) and date >= 0.82
+    has_moderate_date = pd.notna(date) and date >= 0.45
+    has_usable_location = pd.notna(loc) and loc >= 0.30
+    has_entity_support = entity >= 0.33
+    has_text_support = text >= 0.05
+    has_strong_text = text >= 0.10
+
+    if (
+        text_kind == "extracted_document_text"
+        and percentile >= 0.95
+        and score >= 0.38
+        and (
+            (has_close_date and (has_entity_support or has_usable_location))
+            or (has_moderate_date and has_entity_support and has_strong_text)
+            or (has_usable_location and entity >= 0.50 and has_text_support)
+        )
+    ):
         label = "likely same event"
     elif (
         text_kind == "extracted_document_text"
+        and score >= 0.30
         and (
-            (pd.notna(date) and date >= 0.82 and entity >= 0.33 and text >= 0.035)
-            or (pd.notna(loc) and loc >= 0.30 and pd.notna(date) and date >= 0.62)
-            or (text >= 0.12 and entity >= 0.50)
+            (has_close_date and has_text_support)
+            or (has_moderate_date and has_entity_support)
+            or (has_usable_location and (has_moderate_date or has_entity_support))
+            or (has_strong_text and entity >= 0.50)
         )
     ):
         label = "possibly same event"
@@ -340,10 +362,6 @@ def date_similarity(a: str, b: str, b_precision: str = "day") -> float:
         return 0.32
     if days <= 365:
         return 0.18
-    if da.year == db.year and da.month == db.month:
-        return 0.40
-    if da.year == db.year:
-        return 0.12
     return 0.0
 
 
@@ -468,6 +486,7 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
     pursue = df[df["source"] == "pursue"].copy()
     if kaggle.empty or pursue.empty:
         empty = pd.DataFrame(columns=[
+            "candidate_rank", "score_percentile",
             "kaggle_record_id", "pursue_record_id", "kaggle_date", "pursue_date",
             "pursue_date_precision", "pursue_date_hint_start", "pursue_date_hint_end",
             "kaggle_location", "pursue_location", "kaggle_text", "pursue_text",
@@ -547,12 +566,15 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                 })
     out = pd.DataFrame(rows)
     if not out.empty:
-        out = out.sort_values("final_score", ascending=False).head(100)
+        out = out.sort_values("final_score", ascending=False).head(100).reset_index(drop=True)
+        out.insert(0, "candidate_rank", range(1, len(out) + 1))
+        denominator = max(len(out) - 1, 1)
+        out.insert(1, "score_percentile", [round(1 - (rank - 1) / denominator, 4) for rank in out["candidate_rank"]])
+        labels = out.apply(validation_label, axis=1, result_type="expand")
+        out["manual_label"] = labels[0]
+        out["manual_notes"] = labels[1]
     out.to_csv(REPORTS / "ufo_candidate_matches.csv", index=False)
     manual = out.head(20).copy()
-    labels = manual.apply(validation_label, axis=1, result_type="expand") if not manual.empty else pd.DataFrame(columns=[0, 1])
-    manual["manual_label"] = labels[0] if not manual.empty else ""
-    manual["manual_notes"] = labels[1] if not manual.empty else ""
     manual.to_csv(REPORTS / "ufo_manual_validation_template.csv", index=False)
     manual.to_csv(REPORTS / "ufo_manual_validation_completed.csv", index=False)
     return out
@@ -645,12 +667,17 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "",
         "The base signals are text, date, location, and entity/keyword overlap. The score is normalized over reliable available signals. Location is ignored when the PURSUE location is missing, non-terrestrial, or too broad. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.",
         "",
+        "Date similarity is based on absolute day distance, so cross-year near misses such as December 31 versus January 2 are still treated as close. Full-date gaps use tiers from exact day through 365 days; year-only official dates use a weaker same-year/plus-minus-one-year fallback.",
+        "",
+        "Validation labels are rank-aware: `likely same event` means the pair is among the strongest exported candidates and has multiple supporting signals. It does not mean confirmed identity.",
+        "",
         "## Candidate Matches",
     ]
     if matches.empty:
         lines.append("No candidate matches were generated. Check whether both Kaggle and PURSUE inputs are available.")
     else:
         lines.append("Candidate matches are exported to `outputs/reports/ufo_candidate_matches.csv`.")
+        lines.append("All exported candidates include formula labels and notes.")
         lines.append("The top-20 LLM-assisted manual review is `outputs/reports/ufo_manual_validation_completed.csv`.")
         lines.append(f"Validation labels among top 20: {label_counts}.")
     lines.extend([

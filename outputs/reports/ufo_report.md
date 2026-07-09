@@ -9,10 +9,15 @@ Candidate pairs are blocked by incident year or inferred year range where possib
 
 The base signals are text, date, location, and entity/keyword overlap. The score is normalized over reliable available signals. Location is ignored when the PURSUE location is missing, non-terrestrial, or too broad. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.
 
+Date similarity is based on absolute day distance, so cross-year near misses such as December 31 versus January 2 are still treated as close. Full-date gaps use tiers from exact day through 365 days; year-only official dates use a weaker same-year/plus-minus-one-year fallback.
+
+Validation labels are rank-aware: `likely same event` means the pair is among the strongest exported candidates and has multiple supporting signals. It does not mean confirmed identity.
+
 ## Candidate Matches
 Candidate matches are exported to `outputs/reports/ufo_candidate_matches.csv`.
+All exported candidates include formula labels and notes.
 The top-20 LLM-assisted manual review is `outputs/reports/ufo_manual_validation_completed.csv`.
-Validation labels among top 20: {'probably not same event': 11, 'possibly same event': 9}.
+Validation labels among top 20: {'possibly same event': 16, 'likely same event': 4}.
 
 ## Exploration Outputs
 - Common terms: `data/processed/ufo_top_terms.csv`.
@@ -24,11 +29,11 @@ Validation labels among top 20: {'probably not same event': 11, 'possibly same e
 - Rare sightings: `data/processed/ufo_rare_sightings.csv`.
 
 ## Validation Examples
-- `possibly same event`: Kaggle `59561` vs PURSUE `59_64634_711.5612[7-2852`. Reason: uses extracted official document text; date is in a moderately close window; entity/keyword overlap is meaningful; official location was not usable; direct text similarity is low
-- `possibly same event`: Kaggle `72778` vs PURSUE `DOW-UAP-D48, Department of the Air Force Report, 1996`. Reason: uses extracted official document text; date is exact or within a few days; official location was not usable; direct text similarity is low
-- `possibly same event`: Kaggle `57484` vs PURSUE `59_214434_SP 16 [7.18.1963]`. Reason: uses extracted official document text; date is exact or within a few days; official location was not usable; direct text similarity is low
-- `probably not same event`: Kaggle `19618` vs PURSUE `State Department UAP Cable 4, Ashgabat, Turkmenistan, November 5, 2004`. Reason: uses extracted official document text; date is in a moderately close window; entity/keyword overlap is meaningful; direct text similarity is low
-- `probably not same event`: Kaggle `27343` vs PURSUE `38_143685_box_Incident_Summaries_173-233`. Reason: uses extracted official document text; entity/keyword overlap is meaningful; official date is missing or only inferred; official location was not usable
+- `possibly same event`: Kaggle `28762` vs PURSUE `38_143685_box_Incident_Summaries_173-233`. Reason: top-ranked candidate relative to exported matches; uses extracted official document text; entity/keyword overlap is meaningful; official date is missing or only inferred; official location was not usable
+- `possibly same event`: Kaggle `56496` vs PURSUE `59_214434_SP 16 [7.18.1963]`. Reason: uses extracted official document text; date is exact or within a few days; official location was not usable; direct text similarity is low
+- `possibly same event`: Kaggle `73133` vs PURSUE `State Department UAP Cable 5, Mexico, September 16, 2003`. Reason: uses extracted official document text; date is exact or within a few days; direct text similarity is low
+- `likely same event`: Kaggle `59561` vs PURSUE `59_64634_711.5612[7-2852`. Reason: top-ranked candidate relative to exported matches; uses extracted official document text; date is in a moderately close window; entity/keyword overlap is meaningful; official location was not usable; direct text similarity is low
+- `likely same event`: Kaggle `72778` vs PURSUE `DOW-UAP-D48, Department of the Air Force Report, 1996`. Reason: top-ranked candidate relative to exported matches; uses extracted official document text; date is exact or within a few days; official location was not usable; direct text similarity is low
 
 ## Conclusions
 The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Date proximity and entity overlap are the most useful automated signals; location is only useful when the official location is specific and terrestrial.
