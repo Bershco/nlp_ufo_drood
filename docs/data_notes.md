@@ -18,12 +18,13 @@ data/raw/ufo/pursue_metadata.csv
 
 If no local PURSUE CSV is present, the script tries a public metadata mirror that preserves links to the official `war.gov` files. The official `war.gov` shell endpoint returned HTTP 403 during setup, so this fallback is documented rather than hidden. Optional PDF text extraction can be added if official files are downloaded locally, but the current implementation uses the metadata descriptions and source links.
 
-Manual PURSUE downloads were added under `data/manual_raw/` and extracted into `data/manual_extracted/`. The originals are preserved. Text extraction results are indexed in:
+Manual PURSUE downloads were added under `data/manual_raw/` and extracted into `data/manual_extracted/`. After successful extraction, the original zip archives were deleted at the user's request; extracted files and extracted text remain. Text extraction results are indexed in:
 
 ```text
 data/processed/pursue_document_text_index.csv
 outputs/reports/manual_archive_extraction.csv
 outputs/reports/manual_raw_inventory.csv
+outputs/reports/manual_zip_cleanup.csv
 ```
 
 Current extraction summary: 6 archives, 431 extracted files, 175 files with extracted text. Some files are videos, unsupported formats, or malformed/non-PDF files despite a PDF extension; these are inventoried and left in place.

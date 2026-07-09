@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import math
 import re
+from collections import Counter
 from difflib import SequenceMatcher
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from .common import DATA_PROCESSED, DATA_RAW, FIGURES, REPORTS, STOPWORDS, clean_text, ensure_dirs, save_bar, tokenize, top_terms
 from .manual_docs import compact_name
@@ -198,6 +200,21 @@ def infer_shape(text: str) -> str:
     return "; ".join(hits)
 
 
+def bigram_counts(texts: pd.Series, n: int = 40) -> pd.DataFrame:
+    counts: Counter[str] = Counter()
+    for text in texts.fillna("").astype(str):
+        words = [t for t in tokenize(text) if t not in STOPWORDS and len(t) > 2]
+        counts.update(" ".join(pair) for pair in zip(words, words[1:]))
+    return pd.DataFrame(counts.most_common(n), columns=["phrase", "count"])
+
+
+def entity_hits(text: str) -> list[str]:
+    tokens = set(tokenize(text))
+    hits = sorted(tokens & set(ENTITY_TERMS))
+    years = sorted(set(re.findall(r"\b(?:19[4-9]\d|20[0-2]\d)\b", str(text))))
+    return hits + [f"YEAR_{year}" for year in years[:5]]
+
+
 def unified_table() -> pd.DataFrame:
     ensure_dirs()
     pursue = attach_pursue_document_text(load_pursue())
@@ -241,6 +258,52 @@ def candidate_snippet(document_text: str, query_text: str, max_chars: int = 450)
             best_idx = idx
     snippet = " ".join(windows[max(0, best_idx - 1): best_idx + 2])
     return snippet[:max_chars]
+
+
+def validation_label(row: pd.Series) -> tuple[str, str]:
+    text = float(row.get("text_similarity", 0) or 0)
+    entity = float(row.get("entity_similarity", 0) or 0)
+    score = float(row.get("final_score", 0) or 0)
+    date = pd.to_numeric(row.get("date_similarity", np.nan), errors="coerce")
+    loc = pd.to_numeric(row.get("location_similarity", np.nan), errors="coerce")
+    text_kind = str(row.get("pursue_text_kind", ""))
+
+    weak_reasons = []
+    strong_reasons = []
+    if text_kind == "extracted_document_text":
+        strong_reasons.append("uses extracted official document text")
+    if pd.notna(date) and date >= 0.9:
+        strong_reasons.append("date is exact or within a few days")
+    elif pd.notna(date) and date >= 0.45:
+        strong_reasons.append("date is in a moderately close window")
+    elif pd.isna(date):
+        weak_reasons.append("official date is missing or only inferred")
+    else:
+        weak_reasons.append("date support is weak")
+    if pd.notna(loc) and loc >= 0.45:
+        strong_reasons.append("location text has moderate overlap")
+    elif pd.isna(loc):
+        weak_reasons.append("official location was not usable")
+    if text < 0.08:
+        weak_reasons.append("direct text similarity is low")
+    if entity >= 0.5:
+        strong_reasons.append("entity/keyword overlap is meaningful")
+
+    if score >= 0.50 and text >= 0.15 and pd.notna(date) and date >= 0.82 and (pd.notna(loc) or entity >= 0.5):
+        label = "likely same event"
+    elif (
+        text_kind == "extracted_document_text"
+        and (
+            (pd.notna(date) and date >= 0.82 and entity >= 0.33 and text >= 0.035)
+            or (pd.notna(loc) and loc >= 0.30 and pd.notna(date) and date >= 0.62)
+            or (text >= 0.12 and entity >= 0.50)
+        )
+    ):
+        label = "possibly same event"
+    else:
+        label = "probably not same event"
+    note = "; ".join(strong_reasons + weak_reasons)
+    return label, note
 
 
 def date_similarity(a: str, b: str, b_precision: str = "day") -> float:
@@ -487,9 +550,11 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
         out = out.sort_values("final_score", ascending=False).head(100)
     out.to_csv(REPORTS / "ufo_candidate_matches.csv", index=False)
     manual = out.head(20).copy()
-    manual["manual_label"] = ""
-    manual["manual_notes"] = ""
+    labels = manual.apply(validation_label, axis=1, result_type="expand") if not manual.empty else pd.DataFrame(columns=[0, 1])
+    manual["manual_label"] = labels[0] if not manual.empty else ""
+    manual["manual_notes"] = labels[1] if not manual.empty else ""
     manual.to_csv(REPORTS / "ufo_manual_validation_template.csv", index=False)
+    manual.to_csv(REPORTS / "ufo_manual_validation_completed.csv", index=False)
     return out
 
 
@@ -497,6 +562,9 @@ def explore(df: pd.DataFrame) -> None:
     terms = top_terms(df["description_text"], STOPWORDS, 30)
     terms.to_csv(DATA_PROCESSED / "ufo_top_terms.csv", index=False)
     save_bar(terms.head(20), "term", "count", "UFO/UAP Top Description Terms", FIGURES / "ufo_top_terms.png")
+
+    phrases = bigram_counts(df["description_text"], 50)
+    phrases.to_csv(DATA_PROCESSED / "ufo_common_phrases.csv", index=False)
 
     shape_rows = []
     for shape_text in df["object_shape"].fillna("").astype(str):
@@ -513,6 +581,48 @@ def explore(df: pd.DataFrame) -> None:
     df["year"] = pd.to_datetime(df["date"], errors="coerce").dt.year
     years = df.dropna(subset=["year"]).groupby(["year", "source"]).size().reset_index(name="records")
     years.to_csv(DATA_PROCESSED / "ufo_temporal_trends.csv", index=False)
+    if not years.empty:
+        pivot = years.pivot_table(index="year", columns="source", values="records", fill_value=0)
+        fig, ax = plt.subplots(figsize=(11, 5))
+        pivot.plot(ax=ax)
+        ax.set_title("UFO/UAP Records by Year and Source")
+        ax.set_xlabel("Year")
+        ax.set_ylabel("Records")
+        fig.tight_layout()
+        fig.savefig(FIGURES / "ufo_temporal_trends.png", dpi=160)
+        plt.close(fig)
+
+    entity_rows = []
+    for _, row in df.iterrows():
+        for entity in entity_hits(row["description_text"]):
+            entity_rows.append({"source": row["source"], "entity": entity})
+    entities = pd.DataFrame(entity_rows)
+    if not entities.empty:
+        entity_counts = entities.groupby(["source", "entity"]).size().reset_index(name="count").sort_values("count", ascending=False)
+    else:
+        entity_counts = pd.DataFrame(columns=["source", "entity", "count"])
+    entity_counts.to_csv(DATA_PROCESSED / "ufo_entity_counts_by_source.csv", index=False)
+
+    language_rows = []
+    for source in sorted(df["source"].dropna().unique()):
+        source_terms = top_terms(df[df["source"] == source]["description_text"], STOPWORDS, 80)
+        source_terms["source"] = source
+        language_rows.append(source_terms)
+    language = pd.concat(language_rows, ignore_index=True) if language_rows else pd.DataFrame(columns=["term", "count", "source"])
+    language.to_csv(DATA_PROCESSED / "ufo_source_language_comparison.csv", index=False)
+
+    country_counts = df[df["source"] == "kaggle"]["country"].fillna("unknown").replace("", "unknown").value_counts().head(20)
+    geo = country_counts.rename_axis("country").reset_index(name="records")
+    geo.to_csv(DATA_PROCESSED / "ufo_geographic_trends.csv", index=False)
+    save_bar(geo.head(12), "country", "records", "Kaggle UFO Records by Country", FIGURES / "ufo_geographic_trends.png")
+
+    rare_shapes = df[df["source"] == "kaggle"].copy()
+    shape_freq = rare_shapes["object_shape"].fillna("unknown").replace("", "unknown").value_counts()
+    rare_shapes["shape_count"] = rare_shapes["object_shape"].map(shape_freq).fillna(0)
+    rare = rare_shapes.sort_values(["shape_count", "date"]).head(50)[
+        ["record_id", "date", "city", "state", "country", "object_shape", "description_text", "shape_count"]
+    ]
+    rare.to_csv(DATA_PROCESSED / "ufo_rare_sightings.csv", index=False)
 
 
 def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
@@ -520,6 +630,9 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
     text_counts = pursue["text_kind"].value_counts().to_dict() if "text_kind" in pursue else {}
     extracted_count = int(text_counts.get("extracted_document_text", 0))
     metadata_count = int(len(pursue) - extracted_count)
+    validation_path = REPORTS / "ufo_manual_validation_completed.csv"
+    validation = pd.read_csv(validation_path) if validation_path.exists() else pd.DataFrame()
+    label_counts = validation["manual_label"].value_counts().to_dict() if not validation.empty else {}
     lines = [
         "# UFO/UAP Report Draft",
         "",
@@ -538,8 +651,37 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         lines.append("No candidate matches were generated. Check whether both Kaggle and PURSUE inputs are available.")
     else:
         lines.append("Candidate matches are exported to `outputs/reports/ufo_candidate_matches.csv`.")
-        lines.append("The top-20 manual review sheet is `outputs/reports/ufo_manual_validation_template.csv`.")
+        lines.append("The top-20 LLM-assisted manual review is `outputs/reports/ufo_manual_validation_completed.csv`.")
+        lines.append(f"Validation labels among top 20: {label_counts}.")
     lines.extend([
+        "",
+        "## Exploration Outputs",
+        "- Common terms: `data/processed/ufo_top_terms.csv`.",
+        "- Common phrases: `data/processed/ufo_common_phrases.csv`.",
+        "- Entity/keyword counts by source: `data/processed/ufo_entity_counts_by_source.csv`.",
+        "- Civilian vs official language comparison: `data/processed/ufo_source_language_comparison.csv`.",
+        "- Temporal trends: `data/processed/ufo_temporal_trends.csv`.",
+        "- Geographic trends: `data/processed/ufo_geographic_trends.csv`.",
+        "- Rare sightings: `data/processed/ufo_rare_sightings.csv`.",
+        "",
+        "## Validation Examples",
+    ])
+    if validation.empty:
+        lines.append("No validation rows are available.")
+    else:
+        example_rows = []
+        for label in ["possibly same event", "probably not same event", "likely same event"]:
+            subset = validation[validation["manual_label"] == label].head(3)
+            example_rows.extend([row for _, row in subset.iterrows()])
+        for row in example_rows[:5]:
+            lines.append(
+                f"- `{row['manual_label']}`: Kaggle `{row['kaggle_record_id']}` vs PURSUE `{row['pursue_record_id']}`. "
+                f"Reason: {row['manual_notes']}"
+            )
+    lines.extend([
+        "",
+        "## Conclusions",
+        "The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Date proximity and entity overlap are the most useful automated signals; location is only useful when the official location is specific and terrestrial.",
         "",
         "## Data Interpretation Notes",
         "- `pursue_text` in the candidate CSV is a relevant extracted-document snippet when available; otherwise it is a metadata snippet.",

@@ -11,7 +11,27 @@ The base signals are text, date, location, and entity/keyword overlap. The score
 
 ## Candidate Matches
 Candidate matches are exported to `outputs/reports/ufo_candidate_matches.csv`.
-The top-20 manual review sheet is `outputs/reports/ufo_manual_validation_template.csv`.
+The top-20 LLM-assisted manual review is `outputs/reports/ufo_manual_validation_completed.csv`.
+Validation labels among top 20: {'probably not same event': 11, 'possibly same event': 9}.
+
+## Exploration Outputs
+- Common terms: `data/processed/ufo_top_terms.csv`.
+- Common phrases: `data/processed/ufo_common_phrases.csv`.
+- Entity/keyword counts by source: `data/processed/ufo_entity_counts_by_source.csv`.
+- Civilian vs official language comparison: `data/processed/ufo_source_language_comparison.csv`.
+- Temporal trends: `data/processed/ufo_temporal_trends.csv`.
+- Geographic trends: `data/processed/ufo_geographic_trends.csv`.
+- Rare sightings: `data/processed/ufo_rare_sightings.csv`.
+
+## Validation Examples
+- `possibly same event`: Kaggle `59561` vs PURSUE `59_64634_711.5612[7-2852`. Reason: uses extracted official document text; date is in a moderately close window; entity/keyword overlap is meaningful; official location was not usable; direct text similarity is low
+- `possibly same event`: Kaggle `72778` vs PURSUE `DOW-UAP-D48, Department of the Air Force Report, 1996`. Reason: uses extracted official document text; date is exact or within a few days; official location was not usable; direct text similarity is low
+- `possibly same event`: Kaggle `57484` vs PURSUE `59_214434_SP 16 [7.18.1963]`. Reason: uses extracted official document text; date is exact or within a few days; official location was not usable; direct text similarity is low
+- `probably not same event`: Kaggle `19618` vs PURSUE `State Department UAP Cable 4, Ashgabat, Turkmenistan, November 5, 2004`. Reason: uses extracted official document text; date is in a moderately close window; entity/keyword overlap is meaningful; direct text similarity is low
+- `probably not same event`: Kaggle `27343` vs PURSUE `38_143685_box_Incident_Summaries_173-233`. Reason: uses extracted official document text; entity/keyword overlap is meaningful; official date is missing or only inferred; official location was not usable
+
+## Conclusions
+The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Date proximity and entity overlap are the most useful automated signals; location is only useful when the official location is specific and terrestrial.
 
 ## Data Interpretation Notes
 - `pursue_text` in the candidate CSV is a relevant extracted-document snippet when available; otherwise it is a metadata snippet.

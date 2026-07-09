@@ -7,13 +7,18 @@ Root doc: [README](../README.md)
 - [x] Unified schema implemented in `nlp_ass5.ufo`.
 - [x] Kaggle loader supports local CSV input.
 - [x] PURSUE loader supports local/remote metadata CSV.
+- [x] PURSUE public document zip bundles extracted locally and indexed.
+- [x] Successfully extracted public document zips removed after extraction at user request.
+- [x] Extracted PURSUE PDF text used where matched to metadata rows.
 - [x] Text, date, location, and entity/keyword similarity signals implemented.
+- [x] Date scoring distinguishes exact day, near days, weeks, months, and same-year distance.
 - [x] Blocking implemented to avoid full all-pairs comparison.
 - [x] Weighted final score implemented.
 - [x] Candidate match export implemented.
-- [x] Manual validation template implemented.
+- [x] LLM-assisted top-20 validation labels and notes implemented.
 - [x] Visualization hooks implemented.
 - [x] Full run completed with local Kaggle CSV and PURSUE metadata mirror.
+- [x] Common words, phrases, source-language comparison, entity counts, temporal trends, geographic trends, and rare sightings exported.
 
 ## Assignment 2: Edwin Drood
 

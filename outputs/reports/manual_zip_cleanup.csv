@@ -1,0 +1,7 @@
+archive,cleanup_action,reason
+data/manual_raw/Release_1.zip,deleted_after_successful_extraction,User requested zip removal after extraction; extraction logged in manual_archive_extraction.csv
+data/manual_raw/release_02_document_bundle.zip,deleted_after_successful_extraction,User requested zip removal after extraction; extraction logged in manual_archive_extraction.csv
+data/manual_raw/release_03_documents.zip,deleted_after_successful_extraction,User requested zip removal after extraction; extraction logged in manual_archive_extraction.csv
+data/manual_raw/uap052226.zip,deleted_after_successful_extraction,User requested zip removal after extraction; extraction logged in manual_archive_extraction.csv
+data/manual_raw/uap_videos_061226.zip,deleted_after_successful_extraction,User requested zip removal after extraction; extraction logged in manual_archive_extraction.csv
+data/manual_raw/uapvideos.zip,deleted_after_successful_extraction,User requested zip removal after extraction; extraction logged in manual_archive_extraction.csv

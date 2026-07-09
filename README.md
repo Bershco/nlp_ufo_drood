@@ -21,6 +21,7 @@ Outputs are written to:
 ## Assignment Coverage
 
 - UFO/UAP pipeline: unified schema, NLP exploration, blocking-based matching, weighted scoring, and manual-validation template.
+- Manual PURSUE document bundles: extracted locally, indexed, and used for official document text where matched.
 - Edwin Drood pipeline: text preparation, character analysis, suspect scoring, clue extraction, Dickens comparison hooks, visualizations, and generated report.
 
 Kaggle normally requires credentials. In this workspace the zip has been extracted to the expected local CSV path:
