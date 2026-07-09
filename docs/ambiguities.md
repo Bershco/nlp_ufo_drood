@@ -10,7 +10,7 @@ The assignment requires the Kaggle UFO dataset, but Kaggle downloads are typical
 
 The official `war.gov` UFO page and PDF endpoints may block command-line access. Decision: support local CSV, official-shaped CSV, and a public metadata mirror while preserving official source links in `source_file_or_link`.
 
-The current text used for matching is PURSUE metadata, not full document text. That is weaker than the assignment ideal, so the matcher now labels repeated metadata summaries, ignores unusable locations such as `Moon` for civilian geographic matching, and distinguishes exact dates from inferred year hints.
+Manual public PURSUE downloads were added and text was extracted where possible. Most PURSUE metadata rows now use matched extracted document text. Remaining metadata-only rows are labeled, unusable locations such as `Moon` are ignored for civilian geographic matching, and exact dates are distinguished from inferred year hints.
 
 ## NER Requirement
 

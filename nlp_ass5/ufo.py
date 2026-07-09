@@ -223,6 +223,26 @@ def text_similarity(a: str, b: str) -> float:
     return 0.65 * jaccard + 0.35 * seq
 
 
+def candidate_snippet(document_text: str, query_text: str, max_chars: int = 450) -> str:
+    text = clean_text(document_text)
+    if len(text) <= max_chars:
+        return text
+    query_tokens = token_set(query_text) | entity_set(query_text)
+    if not query_tokens:
+        return text[:max_chars]
+    windows = re.split(r"(?<=[.!?])\s+", text)
+    best_score = -1
+    best_idx = 0
+    for idx, window in enumerate(windows[:2000]):
+        tokens = token_set(window) | entity_set(window)
+        score = len(tokens & query_tokens)
+        if score > best_score:
+            best_score = score
+            best_idx = idx
+    snippet = " ".join(windows[max(0, best_idx - 1): best_idx + 2])
+    return snippet[:max_chars]
+
+
 def date_similarity(a: str, b: str, b_precision: str = "day") -> float:
     da = pd.to_datetime(a, errors="coerce")
     if str(b_precision) == "year" and re.fullmatch(r"\d{4}", str(b)):
@@ -435,9 +455,10 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                 cheap_candidates.append((cheap, idx))
         for _, idx in sorted(cheap_candidates, reverse=True)[:40]:
             k = kaggle.loc[idx]
+            p_snippet = candidate_snippet(p["description_text"], k["description_text"])
             ent = jaccard(k["entities"], p["entities"])
             dat = date_or_range_similarity(k["date"], p["date"], p["date_precision"], p["year_min"], p["year_max"])
-            txt = text_similarity(k["description_text"], p["description_text"])
+            txt = text_similarity(k["description_text"], p_snippet)
             loc = location_similarity(k, p)
             final, scoring_notes = weighted_score(txt, loc, dat, ent, p["text_kind"])
             if final >= 0.25:
@@ -452,7 +473,7 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                     "kaggle_location": k["location_text"] or f"{k['city']} {k['state']} {k['country']}",
                     "pursue_location": p["location_text"],
                     "kaggle_text": k["description_text"][:350],
-                    "pursue_text": p["description_text"][:350],
+                    "pursue_text": p_snippet,
                     "pursue_text_kind": p["text_kind"],
                     "text_similarity": round(txt, 4),
                     "location_similarity": "" if pd.isna(loc) else round(loc, 4),
@@ -495,16 +516,21 @@ def explore(df: pd.DataFrame) -> None:
 
 
 def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
+    pursue = df[df["source"] == "pursue"]
+    text_counts = pursue["text_kind"].value_counts().to_dict() if "text_kind" in pursue else {}
+    extracted_count = int(text_counts.get("extracted_document_text", 0))
+    metadata_count = int(len(pursue) - extracted_count)
     lines = [
         "# UFO/UAP Report Draft",
         "",
         f"Unified records loaded: {len(df)}.",
         f"Kaggle records: {len(df[df['source'] == 'kaggle'])}. PURSUE records: {len(df[df['source'] == 'pursue'])}.",
+        f"PURSUE rows with extracted document text: {extracted_count}. Metadata-only PURSUE rows: {metadata_count}.",
         "",
         "## Matching Method",
         "Candidate pairs are blocked by incident year or inferred year range where possible.",
         "",
-        "The base signals are text, date, location, and entity/keyword overlap. The score is normalized over reliable available signals. Location is ignored when the PURSUE location is missing, non-terrestrial, or too broad. Repeated PURSUE metadata summaries are penalized because they are document descriptions, not extracted incident text.",
+        "The base signals are text, date, location, and entity/keyword overlap. The score is normalized over reliable available signals. Location is ignored when the PURSUE location is missing, non-terrestrial, or too broad. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.",
         "",
         "## Candidate Matches",
     ]
@@ -516,14 +542,14 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
     lines.extend([
         "",
         "## Data Interpretation Notes",
-        "- `pursue_text` is currently the PURSUE metadata description unless local extracted PDF text is added later.",
-        "- `pursue_text_kind=metadata_repeated_summary` means several official records share the same broad description; those rows should be treated as weak leads.",
+        "- `pursue_text` in the candidate CSV is a relevant extracted-document snippet when available; otherwise it is a metadata snippet.",
+        "- `pursue_text_kind=metadata_summary` means the official file could not be matched to extracted text and should be treated as weaker evidence.",
         "- `pursue_date_precision` distinguishes exact dates from year-only or missing dates.",
         "- Blank `location_similarity` means location was deliberately ignored rather than scored as a real match.",
         "",
         "## Limitations",
-        "- PURSUE matching is metadata-level unless official PDFs are downloaded and extracted.",
-        "- Some official records describe file collections or historical launch summaries, not single events.",
+        "- Some extracted official records describe file collections, launch summaries, or long historical reports rather than single events.",
+        "- OCR quality varies across scanned PDFs; some downloaded files were videos or malformed/unsupported documents.",
         "- The candidate list is a triage artifact for manual validation, not a final claim that the events match.",
         "- Keyword entities are transparent but weaker than a full NER or sentence-embedding pipeline.",
     ])

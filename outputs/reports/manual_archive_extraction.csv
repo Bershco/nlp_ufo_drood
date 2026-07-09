@@ -1,0 +1,7 @@
+archive,target_dir,files_extracted,status,error
+data/manual_raw/Release_1.zip,data/manual_extracted/Release_1,261,extracted,
+data/manual_raw/release_02_document_bundle.zip,data/manual_extracted/release_02_document_bundle,13,extracted,
+data/manual_raw/release_03_documents.zip,data/manual_extracted/release_03_documents,63,extracted,
+data/manual_raw/uap052226.zip,data/manual_extracted/uap052226,57,extracted,
+data/manual_raw/uap_videos_061226.zip,data/manual_extracted/uap_videos_061226,9,extracted,
+data/manual_raw/uapvideos.zip,data/manual_extracted/uapvideos,28,extracted,

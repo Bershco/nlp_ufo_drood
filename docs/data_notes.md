@@ -18,7 +18,17 @@ data/raw/ufo/pursue_metadata.csv
 
 If no local PURSUE CSV is present, the script tries a public metadata mirror that preserves links to the official `war.gov` files. The official `war.gov` shell endpoint returned HTTP 403 during setup, so this fallback is documented rather than hidden. Optional PDF text extraction can be added if official files are downloaded locally, but the current implementation uses the metadata descriptions and source links.
 
-Important interpretation detail: the current `pursue_text` values are metadata descriptions, not full extracted PDF text. Repeated descriptions are marked as `metadata_repeated_summary` in `data/processed/ufo_unified.csv` and are penalized in matching. Blank location scores in the match CSV mean the official location was missing, non-terrestrial, or too broad to use.
+Manual PURSUE downloads were added under `data/manual_raw/` and extracted into `data/manual_extracted/`. The originals are preserved. Text extraction results are indexed in:
+
+```text
+data/processed/pursue_document_text_index.csv
+outputs/reports/manual_archive_extraction.csv
+outputs/reports/manual_raw_inventory.csv
+```
+
+Current extraction summary: 6 archives, 431 extracted files, 175 files with extracted text. Some files are videos, unsupported formats, or malformed/non-PDF files despite a PDF extension; these are inventoried and left in place.
+
+Important interpretation detail: most PURSUE rows now use extracted document text where filenames could be matched. Metadata-only descriptions remain marked as `metadata_summary` in `data/processed/ufo_unified.csv` and are penalized in matching. Blank location scores in the match CSV mean the official location was missing, non-terrestrial, or too broad to use.
 
 ## Edwin Drood
 

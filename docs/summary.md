@@ -8,7 +8,7 @@ This project is structured as a practical assignment solution:
 - `nlp_ass5.ufo` implements the UFO/UAP schema, exploration, matching, and manual validation exports.
 - `nlp_ass5.run_all` creates folders and runs both pipelines where data is available.
 
-The main known limitation is official PURSUE document access. Drood is fully public and runs immediately after dependencies are installed. UFO matching now uses the local Kaggle CSV at `data/raw/ufo/kaggle_ufo.csv`; PURSUE metadata is loaded from a local CSV when available or from the public metadata mirror. The current candidate file should be read as metadata-level triage, not final evidence of shared events.
+Drood is fully public and runs immediately after dependencies are installed. UFO matching now uses the local Kaggle CSV at `data/raw/ufo/kaggle_ufo.csv`; PURSUE metadata from the public mirror; and manually downloaded public PURSUE documents from `data/manual_raw/`. The candidate file should still be read as triage, not final evidence of shared events, because some official documents are broad reports or noisy OCR rather than single incident records.
 
 Next steps before submission:
 

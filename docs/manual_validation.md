@@ -20,7 +20,8 @@ Use these cues:
 - Locations: city/state agreement or short geographic distance is strong. Blank `location_similarity` means the official location was not usable for matching.
 - Text: unique objects, motion, color, military references, and rare phrases matter more than generic words like "light".
 - Source differences: official records may be redacted, vague, or written in bureaucratic language.
-- `pursue_text_kind=metadata_repeated_summary` is a weak signal because the same official metadata description appears on multiple files.
+- `pursue_text_kind=extracted_document_text` means the snippet came from a downloaded public document.
+- `pursue_text_kind=metadata_summary` is weaker because no extracted document text was matched for that official row.
 
 Discuss at least five examples in the final report.
 
