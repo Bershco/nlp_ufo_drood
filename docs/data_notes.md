@@ -18,6 +18,8 @@ data/raw/ufo/pursue_metadata.csv
 
 If no local PURSUE CSV is present, the script tries a public metadata mirror that preserves links to the official `war.gov` files. The official `war.gov` shell endpoint returned HTTP 403 during setup, so this fallback is documented rather than hidden. Optional PDF text extraction can be added if official files are downloaded locally, but the current implementation uses the metadata descriptions and source links.
 
+Important interpretation detail: the current `pursue_text` values are metadata descriptions, not full extracted PDF text. Repeated descriptions are marked as `metadata_repeated_summary` in `data/processed/ufo_unified.csv` and are penalized in matching. Blank location scores in the match CSV mean the official location was missing, non-terrestrial, or too broad to use.
+
 ## Edwin Drood
 
 The script downloads Project Gutenberg eBook 564 from:

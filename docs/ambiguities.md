@@ -6,9 +6,11 @@ Root doc: [README](../README.md)
 
 The assignment requires the Kaggle UFO dataset, but Kaggle downloads are typically credentialed. Decision: implement a local CSV loader and document the required path instead of embedding credentials or relying on an unofficial copy.
 
-## PURSUE Access
+## PURSUE Access and Text
 
-The official `war.gov` UFO page and CSV endpoint may block command-line access. Decision: support local CSV, official-shaped CSV, and a public metadata mirror while preserving official source links in `source_file_or_link`.
+The official `war.gov` UFO page and PDF endpoints may block command-line access. Decision: support local CSV, official-shaped CSV, and a public metadata mirror while preserving official source links in `source_file_or_link`.
+
+The current text used for matching is PURSUE metadata, not full document text. That is weaker than the assignment ideal, so the matcher now labels repeated metadata summaries, ignores unusable locations such as `Moon` for civilian geographic matching, and distinguishes exact dates from inferred year hints.
 
 ## NER Requirement
 
