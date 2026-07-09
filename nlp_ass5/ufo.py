@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 from .common import DATA_PROCESSED, DATA_RAW, FIGURES, REPORTS, STOPWORDS, clean_text, ensure_dirs, save_bar, tokenize, top_terms
+from .manual_docs import compact_name
 
 
 PURSUE_MIRROR = "https://raw.githubusercontent.com/DenisSergeevitch/UFO-USA/main/metadata/uap-csv.csv"
@@ -19,6 +20,11 @@ SCHEMA = [
 ]
 SHAPE_TERMS = ["light", "sphere", "triangle", "disk", "disc", "fireball", "formation", "orb", "cigar", "circle", "oval"]
 ENTITY_TERMS = SHAPE_TERMS + ["military", "base", "aircraft", "weather", "radar", "pilot", "navy", "army", "fbi", "cloud", "missile"]
+LOCATION_HINTS = [
+    "vandenberg", "roswell", "wright patterson", "nellis", "groom lake", "oak ridge",
+    "washington", "turkmenistan", "georgia", "syria", "iraq", "persian gulf",
+    "arabian gulf", "mediterranean sea", "strait of hormuz", "low earth orbit", "moon",
+]
 
 
 def first_existing_column(df: pd.DataFrame, candidates: list[str]) -> str | None:
@@ -124,6 +130,68 @@ def load_pursue(path: Path = DATA_RAW / "ufo" / "pursue_metadata.csv") -> pd.Dat
     return out[SCHEMA]
 
 
+def load_document_text_index(path: Path = DATA_PROCESSED / "pursue_document_text_index.csv") -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    return df[df["text_length"].fillna(0).astype(int) > 0].copy()
+
+
+def read_extracted_text(text_path: object) -> str:
+    if not isinstance(text_path, str) or not text_path:
+        return ""
+    path = ROOT_SAFE_PATH(text_path)
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def ROOT_SAFE_PATH(relative_path: str) -> Path:
+    path = (DATA_RAW.parents[1] / relative_path).resolve()
+    root = DATA_RAW.parents[1].resolve()
+    if root not in path.parents and path != root:
+        raise ValueError(f"Path escapes project root: {relative_path}")
+    return path
+
+
+def infer_location_from_text(text: str) -> str:
+    lowered = clean_text(text).lower()
+    hits = [hint for hint in LOCATION_HINTS if hint in lowered]
+    return "; ".join(dict.fromkeys(hits[:5]))
+
+
+def attach_pursue_document_text(pursue: pd.DataFrame) -> pd.DataFrame:
+    index = load_document_text_index()
+    if pursue.empty or index.empty:
+        return pursue
+    docs = index.to_dict("records")
+    updated = pursue.copy()
+    for row_idx, row in updated.iterrows():
+        keys = [
+            compact_name(row.get("record_id", "")),
+            compact_name(Path(str(row.get("source_file_or_link", ""))).name),
+        ]
+        best = None
+        best_score = 0
+        for doc in docs:
+            doc_key = str(doc.get("compact_name", ""))
+            scores = [SequenceMatcher(None, key, doc_key).ratio() for key in keys if key and doc_key]
+            if not scores:
+                continue
+            score = max(scores)
+            if score > best_score:
+                best = doc
+                best_score = score
+        if best and best_score >= 0.78:
+            text = read_extracted_text(best.get("text_path", ""))
+            if text:
+                updated.at[row_idx, "description_text"] = clean_text(text[:20000])
+                updated.at[row_idx, "text_kind"] = "extracted_document_text"
+                if not clean_text(updated.at[row_idx, "location_text"]):
+                    updated.at[row_idx, "location_text"] = infer_location_from_text(text)
+    return updated
+
+
 def infer_shape(text: str) -> str:
     tokens = set(tokenize(text))
     hits = [term for term in SHAPE_TERMS if term in tokens]
@@ -132,7 +200,8 @@ def infer_shape(text: str) -> str:
 
 def unified_table() -> pd.DataFrame:
     ensure_dirs()
-    frames = [frame for frame in [load_kaggle(), load_pursue()] if not frame.empty]
+    pursue = attach_pursue_document_text(load_pursue())
+    frames = [frame for frame in [load_kaggle(), pursue] if not frame.empty]
     df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=SCHEMA)
     for col in SCHEMA:
         if col not in df:
@@ -173,13 +242,25 @@ def date_similarity(a: str, b: str, b_precision: str = "day") -> float:
     if days == 0:
         return 1.0
     if days <= 1:
-        return 0.85
+        return 0.95
+    if days <= 3:
+        return 0.9
     if days <= 7:
-        return 0.65
-    if da.year == db.year and da.month == db.month:
+        return 0.82
+    if days <= 14:
+        return 0.72
+    if days <= 30:
+        return 0.62
+    if days <= 90:
         return 0.45
+    if days <= 180:
+        return 0.32
+    if days <= 365:
+        return 0.18
+    if da.year == db.year and da.month == db.month:
+        return 0.40
     if da.year == db.year:
-        return 0.25
+        return 0.12
     return 0.0
 
 

@@ -6,3 +6,6 @@ data/raw/ufo/kaggle_ufo.csv
 ufo_data.zip
 data/raw/**/*.pdf
 data/raw/**/*.txt
+data/manual_raw/
+data/manual_extracted/
+data/manual_text/
