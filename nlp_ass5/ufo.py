@@ -260,20 +260,27 @@ def candidate_snippet(document_text: str, query_text: str, max_chars: int = 450)
     return snippet[:max_chars]
 
 
-def validation_label(row: pd.Series) -> tuple[str, str]:
+LIKELY_SHARE = 0.03
+POSSIBLE_SHARE = 0.32
+MAX_EXPORTED_CANDIDATES = 500
+
+
+def validation_notes(row: pd.Series, label: str) -> str:
     text = float(row.get("text_similarity", 0) or 0)
     entity = float(row.get("entity_similarity", 0) or 0)
-    score = float(row.get("final_score", 0) or 0)
     date = pd.to_numeric(row.get("date_similarity", np.nan), errors="coerce")
     loc = pd.to_numeric(row.get("location_similarity", np.nan), errors="coerce")
     text_kind = str(row.get("pursue_text_kind", ""))
     percentile = pd.to_numeric(row.get("score_percentile", 0), errors="coerce")
-    rank = pd.to_numeric(row.get("candidate_rank", np.nan), errors="coerce")
 
     weak_reasons = []
     strong_reasons = []
-    if pd.notna(rank) and percentile >= 0.95:
-        strong_reasons.append("top-ranked candidate relative to exported matches")
+    if label == "likely same event":
+        strong_reasons.append(f"top {LIKELY_SHARE:.0%} of exported candidates by final score")
+    elif label == "possibly same event":
+        strong_reasons.append(f"next {POSSIBLE_SHARE:.0%} of exported candidates by final score")
+    else:
+        weak_reasons.append("lower-ranked candidate relative to exported matches")
     if text_kind == "extracted_document_text":
         strong_reasons.append("uses extracted official document text")
     if pd.notna(date) and date >= 0.9:
@@ -292,40 +299,36 @@ def validation_label(row: pd.Series) -> tuple[str, str]:
         weak_reasons.append("direct text similarity is low")
     if entity >= 0.5:
         strong_reasons.append("entity/keyword overlap is meaningful")
+    if pd.notna(percentile):
+        strong_reasons.append(f"score percentile {percentile:.3f}")
+    return "; ".join(strong_reasons + weak_reasons)
 
-    has_close_date = pd.notna(date) and date >= 0.82
-    has_moderate_date = pd.notna(date) and date >= 0.45
-    has_usable_location = pd.notna(loc) and loc >= 0.30
-    has_entity_support = entity >= 0.33
-    has_text_support = text >= 0.05
-    has_strong_text = text >= 0.10
 
-    if (
-        text_kind == "extracted_document_text"
-        and percentile >= 0.95
-        and score >= 0.38
-        and (
-            (has_close_date and (has_entity_support or has_usable_location))
-            or (has_moderate_date and has_entity_support and has_strong_text)
-            or (has_usable_location and entity >= 0.50 and has_text_support)
-        )
-    ):
-        label = "likely same event"
-    elif (
-        text_kind == "extracted_document_text"
-        and score >= 0.30
-        and (
-            (has_close_date and has_text_support)
-            or (has_moderate_date and has_entity_support)
-            or (has_usable_location and (has_moderate_date or has_entity_support))
-            or (has_strong_text and entity >= 0.50)
-        )
-    ):
-        label = "possibly same event"
-    else:
-        label = "probably not same event"
-    note = "; ".join(strong_reasons + weak_reasons)
-    return label, note
+def assign_relative_validation_labels(out: pd.DataFrame) -> pd.DataFrame:
+    if out.empty:
+        return out
+    labeled = out.copy()
+    n = len(labeled)
+    likely_count = max(1, round(n * LIKELY_SHARE))
+    possible_count = max(1, round(n * POSSIBLE_SHARE))
+    likely_count = min(likely_count, n)
+    possible_count = min(possible_count, n - likely_count)
+    labels = (
+        ["likely same event"] * likely_count
+        + ["possibly same event"] * possible_count
+        + ["probably not same event"] * (n - likely_count - possible_count)
+    )
+    labeled["manual_label"] = labels
+    labeled["manual_notes"] = [
+        validation_notes(row, label)
+        for (_, row), label in zip(labeled.iterrows(), labels)
+    ]
+    return labeled
+
+
+def validation_label(row: pd.Series) -> tuple[str, str]:
+    label = str(row.get("manual_label", "probably not same event"))
+    return label, validation_notes(row, label)
 
 
 def date_similarity(a: str, b: str, b_precision: str = "day") -> float:
@@ -566,13 +569,11 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                 })
     out = pd.DataFrame(rows)
     if not out.empty:
-        out = out.sort_values("final_score", ascending=False).head(100).reset_index(drop=True)
+        out = out.sort_values("final_score", ascending=False).head(MAX_EXPORTED_CANDIDATES).reset_index(drop=True)
         out.insert(0, "candidate_rank", range(1, len(out) + 1))
         denominator = max(len(out) - 1, 1)
         out.insert(1, "score_percentile", [round(1 - (rank - 1) / denominator, 4) for rank in out["candidate_rank"]])
-        labels = out.apply(validation_label, axis=1, result_type="expand")
-        out["manual_label"] = labels[0]
-        out["manual_notes"] = labels[1]
+        out = assign_relative_validation_labels(out)
     out.to_csv(REPORTS / "ufo_candidate_matches.csv", index=False)
     manual = out.head(20).copy()
     manual.to_csv(REPORTS / "ufo_manual_validation_template.csv", index=False)
@@ -654,7 +655,9 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
     metadata_count = int(len(pursue) - extracted_count)
     validation_path = REPORTS / "ufo_manual_validation_completed.csv"
     validation = pd.read_csv(validation_path) if validation_path.exists() else pd.DataFrame()
+    all_validation = matches if not matches.empty and "manual_label" in matches else pd.DataFrame()
     label_counts = validation["manual_label"].value_counts().to_dict() if not validation.empty else {}
+    all_label_counts = all_validation["manual_label"].value_counts().to_dict() if not all_validation.empty else {}
     lines = [
         "# UFO/UAP Report Draft",
         "",
@@ -669,7 +672,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "",
         "Date similarity is based on absolute day distance, so cross-year near misses such as December 31 versus January 2 are still treated as close. Full-date gaps use tiers from exact day through 365 days; year-only official dates use a weaker same-year/plus-minus-one-year fallback.",
         "",
-        "Validation labels are rank-aware: `likely same event` means the pair is among the strongest exported candidates and has multiple supporting signals. It does not mean confirmed identity.",
+        f"Validation labels are relative rank bands over the exported candidate pool: top {LIKELY_SHARE:.0%} `likely same event`, next {POSSIBLE_SHARE:.0%} `possibly same event`, and the remainder `probably not same event`. These labels do not mean confirmed identity.",
         "",
         "## Candidate Matches",
     ]
@@ -678,6 +681,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
     else:
         lines.append("Candidate matches are exported to `outputs/reports/ufo_candidate_matches.csv`.")
         lines.append("All exported candidates include formula labels and notes.")
+        lines.append(f"Validation labels among all exported candidates: {all_label_counts}.")
         lines.append("The top-20 LLM-assisted manual review is `outputs/reports/ufo_manual_validation_completed.csv`.")
         lines.append(f"Validation labels among top 20: {label_counts}.")
     lines.extend([

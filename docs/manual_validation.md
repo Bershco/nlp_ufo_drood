@@ -28,7 +28,13 @@ Use these cues:
 
 Discuss at least five examples in the final report.
 
-Current labeling is rank-aware. `likely same event` is reserved for the strongest candidates relative to the exported pool when they also have extracted official text and multiple supporting signals such as close date, entity overlap, or usable location. It does not mean the match is confirmed.
+Current labeling is rank-aware over the exported candidate pool:
+
+- `likely same event`: top 3%.
+- `possibly same event`: next 32%.
+- `probably not same event`: remaining 65%.
+
+These bands sit inside the requested ranges of 2-8%, 15-50%, and 40-80%. The label is a triage priority, not proof that the two reports describe the same event.
 
 ## Related Docs
 

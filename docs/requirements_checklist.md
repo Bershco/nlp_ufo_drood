@@ -15,7 +15,7 @@ Root doc: [README](../README.md)
 - [x] Blocking implemented to avoid full all-pairs comparison.
 - [x] Weighted final score implemented.
 - [x] Candidate match export implemented.
-- [x] LLM-assisted top-20 validation labels and notes implemented.
+- [x] Relative-rank validation labels and notes implemented for all exported candidates, with top-20 review exported.
 - [x] Visualization hooks implemented.
 - [x] Full run completed with local Kaggle CSV and PURSUE metadata mirror.
 - [x] Common words, phrases, source-language comparison, entity counts, temporal trends, geographic trends, and rare sightings exported.
