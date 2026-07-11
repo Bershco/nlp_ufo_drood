@@ -45,6 +45,7 @@ Start here and follow links:
 - [Manual validation guide](docs/manual_validation.md)
 - [Ambiguities and decisions](docs/ambiguities.md)
 - [GPU transformer run guide](docs/gpu_transformer_run.md)
+- [Future upgrade ideas](docs/future_upgrades.md)
 - [Final summary](docs/summary.md)
 
 ## Repository Status

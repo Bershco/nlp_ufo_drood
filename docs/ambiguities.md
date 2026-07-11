@@ -28,3 +28,4 @@ Dickens never finished the novel. Decision: produce a ranked evidence-based susp
 
 - [Data notes](data_notes.md)
 - [Requirements checklist](requirements_checklist.md)
+- [Future upgrade ideas](future_upgrades.md)
