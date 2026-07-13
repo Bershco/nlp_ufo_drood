@@ -42,7 +42,7 @@ Cross-encoders are slower than embeddings, so they should be used only after blo
 
 ## 2. Structured Event Facet Extraction
 
-Instead of comparing raw text only, extract comparable event facets from both sources. This makes the matching more explainable and less dependent on noisy OCR wording.
+Instead of comparing raw text only, extract comparable event facets from both sources. This makes the matching more explainable and less dependent on noisy OCR wording. A first lightweight version now exists through canonical shape normalization and rule-based NER-style extraction; the future upgrade is to make these facets richer and more reliable.
 
 Useful facets:
 
@@ -59,8 +59,8 @@ Useful facets:
 Practical implementation:
 
 - Add a `ufo_event_facets.csv` table with one row per record or document chunk.
-- Use deterministic regex/keyword rules first, since they are transparent and assignment-friendly.
-- Add optional spaCy or transformer-based extraction later.
+- Extend the deterministic regex/keyword rules that are now in the baseline.
+- Add optional spaCy or transformer-based extraction later for stronger NER.
 - Compute separate similarities for each facet and include them in the candidate export.
 
 Expected benefit:
@@ -158,7 +158,7 @@ OCR quality metrics are approximate. They should downweight, not delete, unless 
 
 ## 7. Better Location Handling
 
-The current location logic deliberately ignores unusable official locations such as `Moon`, `Low Earth Orbit`, or missing values. This avoids nonsense matches, but still leaves many pairs with no location support.
+The current location logic deliberately ignores unusable official locations such as `Moon`, `Low Earth Orbit`, or missing values. This avoids nonsense matches, and the exploration now includes an interactive Leaflet map for geocoded Kaggle records. The remaining upgrade is better extraction and scoring of official locations.
 
 Practical implementation:
 
@@ -178,7 +178,7 @@ Geocoding can introduce errors, especially with old place names, military bases,
 
 ## 8. Better Date Reasoning
 
-The current date score handles exact days, near-day gaps, month-scale gaps, year ranges, and missing dates. A stronger version could reason about publication dates versus event dates.
+The current date score handles exact days, near-day gaps, month-scale gaps, year ranges, and missing dates, and date weight has been reduced because official dates are mixed-quality evidence. A stronger version could reason about publication dates versus event dates.
 
 Practical implementation:
 
@@ -271,4 +271,3 @@ Manual labels may be inconsistent. The labeling guide should define "likely", "p
 8. Calibrate with more manual labels.
 
 This order improves evidence quality before adding more complex model layers.
-

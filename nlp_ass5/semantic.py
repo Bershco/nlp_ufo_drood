@@ -74,8 +74,6 @@ class SemanticEmbedder:
             self.error = str(exc)
 
     def encode_cached(self, name: str, ids: list[str], texts: list[str]) -> EncodedTexts:
-        if not self.available or self.model is None:
-            raise RuntimeError(f"Semantic model unavailable: {self.error}")
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         key = cache_key(name, self.model_name, ids, texts)
         npz_path = CACHE_DIR / f"{name}_{key}.npz"
@@ -84,6 +82,8 @@ class SemanticEmbedder:
             embeddings = np.load(npz_path)["embeddings"]
             meta = json.loads(meta_path.read_text(encoding="utf-8"))
             return EncodedTexts(ids=meta["ids"], texts=meta["texts"], embeddings=embeddings)
+        if not self.available or self.model is None:
+            raise RuntimeError(f"Semantic model unavailable and no matching cache exists: {self.error}")
 
         embeddings = self.model.encode(
             texts,

@@ -11,12 +11,18 @@ Root doc: [README](../README.md)
 - [x] Successfully extracted public document zips removed after extraction at user request.
 - [x] Extracted PURSUE PDF text used where matched to metadata rows.
 - [x] Text, date, location, and entity/keyword similarity signals implemented.
+- [x] Explicit TF-IDF text similarity implemented as a secondary/fallback signal.
+- [x] Rule-based NER-style extraction implemented for places/locations, dates, organizations/military terms, shapes, colors, and motion terms.
 - [x] Date scoring distinguishes exact day, near days, weeks, months, and same-year distance.
-- [x] Blocking implemented to avoid full all-pairs comparison.
+- [x] Blocking/retrieval implemented to avoid naive all-pairs comparison; transformer runs use broad semantic top-k retrieval because official date/location metadata is weak.
 - [x] Weighted final score implemented.
+- [x] Date score weight reduced because PURSUE dates are not always confidently event dates.
 - [x] Candidate match export implemented.
+- [x] Candidate export includes all required reporting fields plus source pointers for manual inspection.
 - [x] Relative-rank validation labels and notes implemented for all exported candidates, with top-20 review exported.
+- [x] Top-20 manual review helper CSV/Markdown exported.
 - [x] Visualization hooks implemented.
+- [x] Interactive geographic map exported in addition to static figures.
 - [x] Full run completed with local Kaggle CSV and PURSUE metadata mirror.
 - [x] Common words, phrases, source-language comparison, entity counts, temporal trends, geographic trends, and rare sightings exported.
 

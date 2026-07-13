@@ -46,6 +46,7 @@ Start here and follow links:
 - [Ambiguities and decisions](docs/ambiguities.md)
 - [GPU transformer run guide](docs/gpu_transformer_run.md)
 - [Future upgrade ideas](docs/future_upgrades.md)
+- [UFO revision plan](docs/ufo_revision_plan.md)
 - [Final summary](docs/summary.md)
 
 ## Repository Status
