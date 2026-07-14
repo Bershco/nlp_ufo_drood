@@ -261,7 +261,7 @@ Manual labels may be inconsistent. The labeling guide should define "likely", "p
 
 ## Recommended Upgrade Order
 
-1. Add structured event facets.
+1. Expand structured event facets beyond the current rule-based NER/shape baseline.
 2. Improve official chunking and OCR quality scoring.
 3. Run a stronger embedding model comparison.
 4. Add cross-encoder or LLM reranking for top candidates.

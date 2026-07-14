@@ -14,8 +14,8 @@ Root doc: [README](../README.md)
    - Load PURSUE metadata from official/mirror CSV or user-supplied file.
    - Normalize both sources into one schema.
    - Explore words, phrases, object shapes, dates, locations, and source language.
-   - Match records with blocking by date/location and weighted similarity.
-   - Use transformer embeddings as the primary text similarity signal when available, with lexical matching as fallback.
+   - Match records with transformer semantic retrieval when available, then score date/location/text/entity evidence after retrieval.
+   - Use transformer embeddings as the primary text similarity signal when available, with TF-IDF and lexical matching as secondary/fallback signals.
    - Export top candidates and a manual validation template.
 
 3. Edwin Drood assignment
@@ -35,7 +35,7 @@ Root doc: [README](../README.md)
 - Unit-level checks are embedded as assertions in loaders where practical.
 - Run `python -m nlp_ass5.run_all` for an end-to-end smoke test.
 - Inspect generated CSVs and figures under `outputs/`.
-- Use `docs/requirements_checklist.md` as the final coverage audit.
+- Use `docs/requirements_checklist.md` and `docs/contradictions_audit.md` as the final coverage and consistency audit.
 
 ## Related Docs
 
@@ -44,3 +44,4 @@ Root doc: [README](../README.md)
 - [Manual validation](manual_validation.md)
 - [Ambiguities](ambiguities.md)
 - [Summary](summary.md)
+- [Contradictions audit](contradictions_audit.md)

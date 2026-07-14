@@ -12,7 +12,7 @@ outputs/reports/ufo_manual_validation_completed.csv
 
 The candidate CSV contains formula labels for all exported candidates. The completed top-20 review file is generated for the assignment's manual-validation requirement.
 
-When running on a GPU machine with `sentence-transformers` installed, rerun `python -m nlp_ass5.ufo` so `transformer_similarity` is populated and labels are recalculated from the transformer-primary score. If transformer dependencies are unavailable, `transformer_similarity` stays blank and the pipeline uses the lexical fallback.
+When running on a GPU machine or local environment with `sentence-transformers` installed, rerun `python -m nlp_ass5.ufo` so `transformer_similarity` is populated and labels are recalculated from the transformer-primary score. If transformer dependencies are unavailable and no matching embedding cache exists, `transformer_similarity` stays blank and the pipeline uses the TF-IDF/lexical fallback.
 
 If reviewing or changing labels by hand, use:
 
@@ -27,6 +27,7 @@ Use these cues:
 - Source differences: official records may be redacted, vague, or written in bureaucratic language.
 - `pursue_text_kind=extracted_document_text` means the snippet came from a downloaded public document.
 - `pursue_text_kind=metadata_summary` is weaker because no extracted document text was matched for that official row.
+- `outputs/reports/ufo_top20_manual_review_helper.csv` and `.md` provide review prompts and source pointers for the current top 20.
 
 Discuss at least five examples in the final report.
 

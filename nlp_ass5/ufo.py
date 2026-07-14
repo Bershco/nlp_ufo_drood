@@ -1073,7 +1073,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         lines.append("Candidate matches are exported to `outputs/reports/ufo_candidate_matches.csv`.")
         lines.append("All exported candidates include formula labels and notes.")
         lines.append(f"Validation labels among all exported candidates: {all_label_counts}.")
-        lines.append("The top-20 LLM-assisted manual review is `outputs/reports/ufo_manual_validation_completed.csv`.")
+        lines.append("The top-20 manual-review working file is `outputs/reports/ufo_manual_validation_completed.csv`.")
         lines.append(f"Validation labels among top 20: {label_counts}.")
     lines.extend([
         "",
@@ -1105,7 +1105,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
     lines.extend([
         "",
         "## Conclusions",
-        "The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Date proximity and entity overlap are the most useful automated signals; location is only useful when the official location is specific and terrestrial.",
+        "The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Transformer text similarity is the strongest retrieval signal; entity overlap and date proximity are useful supporting signals only when they are specific and trustworthy. Location is only useful when the official location is specific and terrestrial.",
         "",
         "## Data Interpretation Notes",
         "- `pursue_text` in the candidate CSV is a relevant extracted-document snippet when available; otherwise it is a metadata snippet.",

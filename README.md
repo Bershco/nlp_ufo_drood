@@ -20,7 +20,7 @@ Outputs are written to:
 
 ## Assignment Coverage
 
-- UFO/UAP pipeline: unified schema, NLP exploration, blocking-based matching, weighted scoring, and manual-validation template.
+- UFO/UAP pipeline: unified schema, NLP exploration, semantic retrieval/matching, weighted scoring, and manual-validation template.
 - Manual PURSUE document bundles: extracted locally, indexed, and used for official document text where matched.
 - Edwin Drood pipeline: text preparation, character analysis, suspect scoring, clue extraction, Dickens comparison hooks, visualizations, and generated report.
 
@@ -47,8 +47,9 @@ Start here and follow links:
 - [GPU transformer run guide](docs/gpu_transformer_run.md)
 - [Future upgrade ideas](docs/future_upgrades.md)
 - [UFO revision plan](docs/ufo_revision_plan.md)
+- [Contradictions audit](docs/contradictions_audit.md)
 - [Final summary](docs/summary.md)
 
 ## Repository Status
 
-This is a local git repository initialized for later GitHub remote setup.
+This repository is connected to the GitHub remote used for the assignment.

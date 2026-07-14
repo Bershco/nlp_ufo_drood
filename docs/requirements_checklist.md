@@ -46,3 +46,4 @@ Root doc: [README](../README.md)
 - [x] At least three visualizations per implemented full pipeline.
 - [x] Summary for student and future assistant.
 - [x] Colab-compatible notebook entry point.
+- [x] Contradictions audit created for final consistency review.

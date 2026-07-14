@@ -22,7 +22,7 @@ Validation labels are relative rank bands over the exported candidate pool: top 
 Candidate matches are exported to `outputs/reports/ufo_candidate_matches.csv`.
 All exported candidates include formula labels and notes.
 Validation labels among all exported candidates: {'probably not same event': 325, 'possibly same event': 160, 'likely same event': 15}.
-The top-20 LLM-assisted manual review is `outputs/reports/ufo_manual_validation_completed.csv`.
+The top-20 manual-review working file is `outputs/reports/ufo_manual_validation_completed.csv`.
 Validation labels among top 20: {'likely same event': 15, 'possibly same event': 5}.
 
 ## Exploration Outputs
@@ -44,7 +44,7 @@ Validation labels among top 20: {'likely same event': 15, 'possibly same event':
 - `likely same event`: Kaggle `1317` vs PURSUE `18_6369445_General_1948_Vol_1`. Reason: top 3% of exported candidates by final score; uses extracted official document text; entity/keyword overlap is meaningful; score percentile 0.998; official date is missing or only inferred; official location was not usable
 
 ## Conclusions
-The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Date proximity and entity overlap are the most useful automated signals; location is only useful when the official location is specific and terrestrial.
+The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Transformer text similarity is the strongest retrieval signal; entity overlap and date proximity are useful supporting signals only when they are specific and trustworthy. Location is only useful when the official location is specific and terrestrial.
 
 ## Data Interpretation Notes
 - `pursue_text` in the candidate CSV is a relevant extracted-document snippet when available; otherwise it is a metadata snippet.

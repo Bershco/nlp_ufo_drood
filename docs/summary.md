@@ -12,11 +12,12 @@ Drood is fully public and runs immediately after dependencies are installed. UFO
 
 Next steps before submission:
 
-1. Run `python -m nlp_ass5.run_all`.
-2. Review the generated validation labels if you want to override any judgment calls.
+1. Review the UFO top-20 helper and manually edit labels/notes where your judgment differs.
+2. Reconcile the Drood final interpretation if you want the literary conclusion to favor Jasper rather than the current computational top suspect.
 3. Convert generated markdown/figures into the requested short report or Colab.
 
 ## Related Docs
 
 - [Project plan](plan.md)
 - [Manual validation](manual_validation.md)
+- [Contradictions audit](contradictions_audit.md)
