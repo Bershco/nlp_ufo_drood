@@ -44,17 +44,15 @@ Scope reviewed: Python scripts in `nlp_ass5/`, repository markdown files in `doc
 - Side B: current top-20 UFO candidates have weak or unusable date/location support; transformer text similarity is the main retrieval signal.
 - Resolution: updated `nlp_ass5/ufo.py` and `outputs/reports/ufo_report.md` to say transformer text similarity is the strongest retrieval signal, while date/entity are supporting signals only when specific and trustworthy.
 
+### 7. Broad Terrestrial PURSUE Locations Were Ignored
+
+- Side A: `outputs/reports/ufo_candidate_matches.csv` contained blank `location_similarity` values for rows whose PURSUE location was `Western United States` or `United States`.
+- Side B: those locations are broad but still terrestrial and useful as coarse evidence when Kaggle state/country/coordinates are available.
+- Resolution: updated `nlp_ass5/ufo.py` so missing and non-terrestrial locations are still ignored, but broad terrestrial regions are scored with an offline coarse geospatial matcher. The candidate CSV now includes richer Kaggle location strings with city, state, country, and coordinates where available.
+
 ## Remaining Contradictions or Tensions
 
-### 1. UFO "Likely Same Event" Labels Conflict With Weak Date/Location Evidence
-
-- Side A: `outputs/reports/ufo_candidate_matches.csv` and `outputs/reports/ufo_top20_manual_review_helper.md` label the top 15 candidates as `likely same event`.
-- Side B: the same top 15 have weak or unusable date/location evidence. In the current candidate CSV, all top-15 `likely same event` rows have `date_similarity` missing or below `0.45`, and all have blank `location_similarity`.
-- Why it matters: the label is relative-rank triage, not literal confirmation, but a reader may interpret "likely same event" as a strong factual claim.
-- Current mitigation: `outputs/reports/ufo_report.md` says labels are relative and not proof.
-- Manual decision needed: during top-20 review, consider changing many `likely same event` labels to `possibly same event` or `probably not same event` if the pair lacks event-level evidence beyond broad semantic similarity.
-
-### 2. UFO Manual Validation File Is Generated, Not Truly Manually Reviewed Yet
+### 1. UFO Manual Validation File Is Generated, Not Truly Manually Reviewed Yet
 
 - Side A: assignment requires manual review of the top 20 candidate matches.
 - Side B: `outputs/reports/ufo_manual_validation_completed.csv` is generated automatically from rank bands and notes; your own human review has not yet been applied.
@@ -62,16 +60,7 @@ Scope reviewed: Python scripts in `nlp_ass5/`, repository markdown files in `doc
 - Current mitigation: `outputs/reports/ufo_top20_manual_review_helper.md` explicitly tells you to edit labels/notes if your judgment differs.
 - Manual decision needed: manually inspect the top 20 and edit `ufo_manual_validation_completed.csv` before final submission.
 
-### 3. Drood Numeric Suspect Ranking Conflicts With Qualitative Clues
-
-- Side A: `outputs/reports/drood_report.md` states that Neville Landless is the strongest computational suspect.
-- Side B: `outputs/reports/drood_report.md` also lists 8 clue rows supporting John Jasper and 0 supporting Neville directly in the extracted clue table.
-- Supporting data: `data/processed/drood_suspect_scores.csv` ranks Neville first because opportunity dominates; `data/processed/drood_important_clues.csv` mostly supports Jasper.
-- Why it matters: the final literary conclusion could look incoherent if it says Neville while the strongest displayed textual clues point to Jasper.
-- Current mitigation: local explanation files already note this tension.
-- Manual/code decision needed: either revise the final Drood interpretation to "model ranks Neville, qualitative evidence favors Jasper" or adjust the suspect scoring so motive/suspicious-language clues matter more.
-
-### 4. Rule-Based NER Satisfies the Requirement Only at Baseline Level
+### 2. Rule-Based NER Satisfies the Requirement Only at Baseline Level
 
 - Side A: the assignment explicitly asks to use Named Entity Recognition.
 - Side B: `nlp_ass5/ufo.py` implements transparent rule-based NER-style extraction, not a trained spaCy/transformer NER model.
@@ -79,13 +68,23 @@ Scope reviewed: Python scripts in `nlp_ass5/`, repository markdown files in `doc
 - Current mitigation: docs and notebook clearly say "rule-based NER-style" rather than pretending it is spaCy NER.
 - Manual decision needed: decide whether baseline rule-based NER is enough, or add spaCy NER as an optional enhancement before submission.
 
-### 5. Interactive Map Depends on Internet Tile Loading
+### 3. Interactive Map Depends on Internet Tile Loading
 
 - Side A: `outputs/figures/ufo_geographic_map.html` is an interactive Leaflet/OpenStreetMap map.
 - Side B: the HTML loads Leaflet assets and map tiles from public CDNs; offline viewing will not fully render the base map.
 - Why it matters: if the notebook/report is viewed offline, the map may not display as expected.
-- Current mitigation: static matplotlib geographic figures are still present.
-- Manual decision needed: if offline submission is required, include a screenshot of the map or rely on the static PNG.
+- Current mitigation: `outputs/figures/ufo_geographic_map_offline.png` is generated from local coordinates and works offline.
+- Manual decision needed: use the offline PNG in the submitted notebook/report if the submission environment has no internet access.
+
+## Deferred Non-UFO Tension
+
+### Drood Numeric Suspect Ranking Conflicts With Qualitative Clues
+
+- Side A: `outputs/reports/drood_report.md` states that Neville Landless is the strongest computational suspect.
+- Side B: `outputs/reports/drood_report.md` also lists 8 clue rows supporting John Jasper and 0 supporting Neville directly in the extracted clue table.
+- Supporting data: `data/processed/drood_suspect_scores.csv` ranks Neville first because opportunity dominates; `data/processed/drood_important_clues.csv` mostly supports Jasper.
+- Why it matters: the final literary conclusion could look incoherent if it says Neville while the strongest displayed textual clues point to Jasper.
+- Status: deferred until the Drood assignment pass.
 
 ## Manual Next Steps
 
@@ -102,6 +101,4 @@ Scope reviewed: Python scripts in `nlp_ass5/`, repository markdown files in `doc
    - mark broad semantic matches with poor date/location support as weaker unless the text details are very specific.
 4. Pick at least five reviewed examples for the final report. Include both the automated view and your manual judgment.
 5. Decide whether to add trained spaCy NER. Current rule-based NER is documented, but trained NER would better match the assignment wording.
-6. Decide how to resolve the Drood Neville/Jasper tension before finalizing the Drood section.
-7. If using the interactive UFO map in final submission, verify it renders on the machine/browser used for submission or include a static screenshot.
-
+6. Use `outputs/figures/ufo_geographic_map_offline.png` for an offline-safe geographic figure. The interactive HTML map can remain as an extra artifact.

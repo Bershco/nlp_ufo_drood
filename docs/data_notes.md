@@ -29,7 +29,7 @@ outputs/reports/manual_zip_cleanup.csv
 
 Current extraction summary: 6 archives, 431 extracted files, 175 files with extracted text. Some files are videos, unsupported formats, or malformed/non-PDF files despite a PDF extension; these are inventoried and left in place.
 
-Important interpretation detail: most PURSUE rows now use extracted document text where filenames could be matched. Metadata-only descriptions remain marked as `metadata_summary` in `data/processed/ufo_unified.csv` and are penalized in matching. Blank location scores in the match CSV mean the official location was missing, non-terrestrial, or too broad to use. PURSUE dates are mixed-quality evidence, so date is scored after retrieval and carries reduced final-score weight.
+Important interpretation detail: most PURSUE rows now use extracted document text where filenames could be matched. Metadata-only descriptions remain marked as `metadata_summary` in `data/processed/ufo_unified.csv` and are penalized in matching. Blank location scores in the match CSV mean the official location was missing or non-terrestrial; broad terrestrial locations such as `Western United States` are scored as coarse regions against Kaggle state/country/coordinates. PURSUE dates are mixed-quality evidence, so date is scored after retrieval and carries reduced final-score weight.
 
 Current UFO revision outputs also include:
 
@@ -37,6 +37,7 @@ Current UFO revision outputs also include:
 data/processed/ufo_ner_entities.csv
 data/processed/ufo_ner_summary.csv
 outputs/figures/ufo_geographic_map.html
+outputs/figures/ufo_geographic_map_offline.png
 outputs/reports/ufo_top20_manual_review_helper.csv
 outputs/reports/ufo_top20_manual_review_helper.md
 ```

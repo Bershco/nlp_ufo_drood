@@ -23,6 +23,7 @@ Root doc: [README](../README.md)
 - [x] Top-20 manual review helper CSV/Markdown exported.
 - [x] Visualization hooks implemented.
 - [x] Interactive geographic map exported in addition to static figures.
+- [x] Offline geographic PNG exported for submissions without internet access.
 - [x] Full run completed with local Kaggle CSV and PURSUE metadata mirror.
 - [x] Common words, phrases, source-language comparison, entity counts, temporal trends, geographic trends, and rare sightings exported.
 

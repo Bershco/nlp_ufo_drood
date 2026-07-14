@@ -56,6 +56,60 @@ LOCATION_HINTS = [
     "washington", "turkmenistan", "georgia", "syria", "iraq", "persian gulf",
     "arabian gulf", "mediterranean sea", "strait of hormuz", "low earth orbit", "moon",
 ]
+US_STATE_ABBREVIATIONS = {
+    "al": "alabama", "ak": "alaska", "az": "arizona", "ar": "arkansas", "ca": "california",
+    "co": "colorado", "ct": "connecticut", "de": "delaware", "fl": "florida", "ga": "georgia",
+    "hi": "hawaii", "id": "idaho", "il": "illinois", "in": "indiana", "ia": "iowa",
+    "ks": "kansas", "ky": "kentucky", "la": "louisiana", "me": "maine", "md": "maryland",
+    "ma": "massachusetts", "mi": "michigan", "mn": "minnesota", "ms": "mississippi",
+    "mo": "missouri", "mt": "montana", "ne": "nebraska", "nv": "nevada",
+    "nh": "new hampshire", "nj": "new jersey", "nm": "new mexico", "ny": "new york",
+    "nc": "north carolina", "nd": "north dakota", "oh": "ohio", "ok": "oklahoma",
+    "or": "oregon", "pa": "pennsylvania", "ri": "rhode island", "sc": "south carolina",
+    "sd": "south dakota", "tn": "tennessee", "tx": "texas", "ut": "utah", "vt": "vermont",
+    "va": "virginia", "wa": "washington", "wv": "west virginia", "wi": "wisconsin",
+    "wy": "wyoming", "dc": "district of columbia",
+}
+US_STATE_NAMES = {v: k for k, v in US_STATE_ABBREVIATIONS.items()}
+WESTERN_US_STATES = {
+    "ak", "az", "ca", "co", "hi", "id", "mt", "nm", "nv", "or", "ut", "wa", "wy",
+}
+SOUTHERN_US_STATES = {
+    "al", "ar", "fl", "ga", "ky", "la", "ms", "nc", "ok", "sc", "tn", "tx", "va", "wv",
+}
+EASTERN_US_STATES = {
+    "ct", "de", "dc", "fl", "ga", "ma", "md", "me", "nc", "nh", "nj", "ny", "pa",
+    "ri", "sc", "va", "vt", "wv",
+}
+MIDWEST_US_STATES = {
+    "ia", "il", "in", "ks", "mi", "mn", "mo", "nd", "ne", "oh", "sd", "wi",
+}
+COUNTRY_ALIASES = {
+    "united states": "us", "usa": "us", "u s": "us", "u s a": "us", "us": "us",
+    "united kingdom": "gb", "uk": "gb", "england": "gb", "scotland": "gb", "wales": "gb",
+    "germany": "de", "greece": "gr", "syria": "sy", "iraq": "iq", "iran": "ir",
+    "japan": "jp", "mexico": "mx", "netherlands": "nl", "turkmenistan": "tm",
+    "kazakhstan": "kz", "azerbaijan": "az", "georgia": "ge", "djibouti": "dj",
+    "united arab emirates": "ae", "papua new guinea": "pg",
+}
+REGION_BOXES = {
+    "western united states": (25.0, 72.0, -170.0, -102.0),
+    "southern united states": (24.0, 38.5, -107.0, -74.0),
+    "north america": (7.0, 84.0, -170.0, -50.0),
+    "pacific time zone": (31.0, 49.5, -125.0, -114.0),
+    "middle east": (12.0, 42.0, 25.0, 65.0),
+    "persian gulf": (23.0, 31.0, 47.0, 57.0),
+    "arabian gulf": (23.0, 31.0, 47.0, 57.0),
+    "arabian sea": (5.0, 26.0, 50.0, 78.0),
+    "gulf of oman": (22.0, 27.5, 56.0, 62.5),
+    "gulf of aden": (10.0, 15.0, 42.0, 53.0),
+    "mediterranean sea": (30.0, 46.0, -6.0, 37.0),
+    "aegean sea": (35.0, 41.5, 22.0, 28.5),
+    "strait of hormuz": (25.0, 27.5, 55.0, 57.5),
+    "east china sea": (24.0, 34.0, 120.0, 130.0),
+    "pacific ocean": (-60.0, 65.0, 120.0, -70.0),
+    "indo-pacom": (-50.0, 66.0, 65.0, -70.0),
+}
 TEXT_WEIGHT_WITH_TRANSFORMER = 0.60
 DATE_WEIGHT = 0.15
 ENTITY_WEIGHT_WITH_TRANSFORMER = 0.15
@@ -418,6 +472,51 @@ def write_leaflet_geo_map(df: pd.DataFrame, path: Path = FIGURES / "ufo_geograph
     path.write_text(html, encoding="utf-8")
 
 
+def write_offline_geo_map(df: pd.DataFrame, path: Path = FIGURES / "ufo_geographic_map_offline.png") -> None:
+    points = df[
+        (df["source"] == "kaggle")
+        & pd.to_numeric(df["latitude"], errors="coerce").notna()
+        & pd.to_numeric(df["longitude"], errors="coerce").notna()
+    ].copy()
+    if points.empty:
+        return
+    points["latitude"] = pd.to_numeric(points["latitude"], errors="coerce")
+    points["longitude"] = pd.to_numeric(points["longitude"], errors="coerce")
+    sample = points.sample(min(len(points), 10000), random_state=11)
+    us = sample[
+        sample["country"].fillna("").astype(str).str.lower().eq("us")
+        & sample["latitude"].between(18, 72)
+        & sample["longitude"].between(-170, -64)
+    ]
+    world = sample[~sample.index.isin(us.index)]
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5.5))
+    axes[0].scatter(sample["longitude"], sample["latitude"], s=2, alpha=0.18, color="#2563eb")
+    axes[0].set_title("Global UFO/UAP Report Coordinates")
+    axes[0].set_xlim(-180, 180)
+    axes[0].set_ylim(-65, 85)
+    axes[0].set_xlabel("Longitude")
+    axes[0].set_ylabel("Latitude")
+    axes[0].grid(True, linewidth=0.3, alpha=0.35)
+
+    if not world.empty:
+        axes[0].scatter(world["longitude"], world["latitude"], s=4, alpha=0.25, color="#dc2626")
+
+    if not us.empty:
+        axes[1].scatter(us["longitude"], us["latitude"], s=2, alpha=0.20, color="#047857")
+    axes[1].set_title("United States Detail")
+    axes[1].set_xlim(-126, -66)
+    axes[1].set_ylim(24, 50)
+    axes[1].set_xlabel("Longitude")
+    axes[1].set_ylabel("Latitude")
+    axes[1].grid(True, linewidth=0.3, alpha=0.35)
+
+    fig.suptitle("Offline Geographic View of Kaggle UFO Reports", y=0.98)
+    fig.tight_layout()
+    fig.savefig(path, dpi=180)
+    plt.close(fig)
+
+
 def candidate_snippet(document_text: str, query_text: str, max_chars: int = 450) -> str:
     text = clean_text(document_text)
     if len(text) <= max_chars:
@@ -561,8 +660,10 @@ def validation_notes(row: pd.Series, label: str) -> str:
         weak_reasons.append("official date is missing or only inferred")
     else:
         weak_reasons.append("date support is weak")
-    if pd.notna(loc) and loc >= 0.45:
-        strong_reasons.append("location text has moderate overlap")
+    if pd.notna(loc) and loc >= 0.75:
+        strong_reasons.append("location is geographically compatible")
+    elif pd.notna(loc) and loc >= 0.40:
+        strong_reasons.append("location has broad geographic support")
     elif pd.isna(loc):
         weak_reasons.append("official location was not usable")
     if text < 0.08:
@@ -645,22 +746,139 @@ def clean_location_value(value: object) -> str:
     return text
 
 
-def reliable_pursue_location(value: object) -> bool:
-    loc = clean_location_value(value)
+def normalized_country(value: object) -> str:
+    country = clean_location_value(value)
+    return COUNTRY_ALIASES.get(country, country)
+
+
+def normalized_state(value: object) -> str:
+    state = clean_location_value(value)
+    if not state:
+        return ""
+    if state in US_STATE_ABBREVIATIONS:
+        return state
+    return US_STATE_NAMES.get(state, state)
+
+
+def row_lat_lon(row: pd.Series) -> tuple[float, float] | None:
+    try:
+        lat = float(row.get("latitude", np.nan))
+        lon = float(row.get("longitude", np.nan))
+    except Exception:
+        return None
+    if not math.isfinite(lat) or not math.isfinite(lon):
+        return None
+    return lat, lon
+
+
+def point_in_box(lat: float, lon: float, box: tuple[float, float, float, float]) -> bool:
+    min_lat, max_lat, min_lon, max_lon = box
+    if min_lon <= max_lon:
+        return min_lat <= lat <= max_lat and min_lon <= lon <= max_lon
+    return min_lat <= lat <= max_lat and (lon >= min_lon or lon <= max_lon)
+
+
+def extract_state_from_location_text(location: str) -> str:
+    loc = clean_location_value(location)
     if not loc:
-        return False
-    unavailable = {"moon", "low earth orbit", "earth orbit", "space"}
-    too_broad = {"united states", "western united states", "middle east"}
-    return loc not in unavailable and loc not in too_broad
+        return ""
+    parts = [part.strip() for part in re.split(r"[,;/()]+", loc) if part.strip()]
+    for part in parts:
+        if part in US_STATE_ABBREVIATIONS:
+            return part
+        if part in US_STATE_NAMES:
+            return US_STATE_NAMES[part]
+    tokens = set(tokenize(loc))
+    for name, abbr in US_STATE_NAMES.items():
+        if set(name.split()).issubset(tokens):
+            return abbr
+    return ""
+
+
+def extract_country_from_location_text(location: str) -> str:
+    loc = clean_location_value(location)
+    if not loc:
+        return ""
+    if loc in COUNTRY_ALIASES:
+        return COUNTRY_ALIASES[loc]
+    for alias, code in COUNTRY_ALIASES.items():
+        if re.search(rf"\b{re.escape(alias)}\b", loc):
+            return code
+    return ""
+
+
+def is_non_terrestrial_location(value: object) -> bool:
+    loc = clean_location_value(value)
+    return loc in {"moon", "low earth orbit", "earth orbit", "space"} or any(
+        token in loc for token in ["low earth orbit", "earth orbit"]
+    )
+
+
+def us_region_score(state: str, lat_lon: tuple[float, float] | None, loc: str) -> float | None:
+    region_states = {
+        "western united states": WESTERN_US_STATES,
+        "southern united states": SOUTHERN_US_STATES,
+        "eastern united states": EASTERN_US_STATES,
+        "midwestern united states": MIDWEST_US_STATES,
+        "midwest": MIDWEST_US_STATES,
+        "pacific time zone": {"ca", "or", "wa", "nv"},
+    }
+    for region, states in region_states.items():
+        if region in loc:
+            if state in states:
+                return 0.85
+            if lat_lon and point_in_box(lat_lon[0], lat_lon[1], REGION_BOXES[region]):
+                return 0.80
+            return 0.15
+    if loc == "united states":
+        return 0.45 if state or (lat_lon and point_in_box(lat_lon[0], lat_lon[1], (18.0, 72.0, -170.0, -64.0))) else 0.10
+    if loc == "north america":
+        return 0.40 if lat_lon and point_in_box(lat_lon[0], lat_lon[1], REGION_BOXES[loc]) else 0.10
+    return None
+
+
+def format_location(row: pd.Series) -> str:
+    parts = [
+        clean_text(row.get("city", "")),
+        normalized_state(row.get("state", "")),
+        normalized_country(row.get("country", "")),
+    ]
+    text = ", ".join(part for part in parts if part)
+    raw = clean_text(row.get("location_text", ""))
+    if raw and raw.lower() not in text.lower():
+        text = f"{raw} ({text})" if text else raw
+    lat_lon = row_lat_lon(row)
+    if lat_lon:
+        text = f"{text} [{lat_lon[0]:.4f}, {lat_lon[1]:.4f}]" if text else f"[{lat_lon[0]:.4f}, {lat_lon[1]:.4f}]"
+    return text
 
 
 def location_similarity(a: pd.Series, b: pd.Series) -> float:
-    if b.get("source") == "pursue" and not reliable_pursue_location(b.get("location_text", "")):
+    pursue_loc = clean_location_value(b.get("location_text", ""))
+    if b.get("source") == "pursue" and (not pursue_loc or is_non_terrestrial_location(pursue_loc)):
         return np.nan
     loc_a = " ".join(str(a.get(c, "")) for c in ["city", "state", "country", "location_text"]).lower()
     loc_b = " ".join(str(b.get(c, "")) for c in ["city", "state", "country", "location_text"]).lower()
     if not clean_location_value(loc_a) or not clean_location_value(loc_b):
         return np.nan
+
+    a_state = normalized_state(a.get("state", "")) or extract_state_from_location_text(loc_a)
+    a_country = normalized_country(a.get("country", "")) or extract_country_from_location_text(loc_a)
+    b_state = normalized_state(b.get("state", "")) or extract_state_from_location_text(pursue_loc)
+    b_country = extract_country_from_location_text(pursue_loc) or normalized_country(b.get("country", ""))
+    a_lat_lon = row_lat_lon(a)
+
+    region_score = us_region_score(a_state, a_lat_lon, pursue_loc)
+    if region_score is not None:
+        return region_score
+
+    if pursue_loc in REGION_BOXES and a_lat_lon:
+        return 0.80 if point_in_box(a_lat_lon[0], a_lat_lon[1], REGION_BOXES[pursue_loc]) else 0.05
+    if b_state:
+        return 0.95 if a_state == b_state else (0.35 if a_country == "us" else 0.0)
+    if b_country:
+        return 0.65 if a_country == b_country else 0.0
+
     ratio = SequenceMatcher(None, clean_text(loc_a), clean_text(loc_b)).ratio()
     try:
         lat1, lon1, lat2, lon2 = map(float, [a["latitude"], a["longitude"], b["latitude"], b["longitude"]])
@@ -754,7 +972,7 @@ def weighted_score(
     score = sum(score * weight for _, score, weight in available) / total_weight
     notes = [f"used {', '.join(name for name, _, _ in available)}"]
     if pd.isna(location_score):
-        notes.append("location ignored because PURSUE location is missing, non-terrestrial, or too broad")
+        notes.append("location ignored because PURSUE location is missing or non-terrestrial")
     if str(text_kind) == "metadata_repeated_summary":
         score *= 0.72
         notes.append("penalized repeated PURSUE metadata summary")
@@ -860,7 +1078,7 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                     "pursue_date_precision": p["date_precision"],
                     "pursue_date_hint_start": p["date_hint_start"],
                     "pursue_date_hint_end": p["date_hint_end"],
-                    "kaggle_location": k["location_text"] or f"{k['city']} {k['state']} {k['country']}",
+                    "kaggle_location": format_location(k),
                     "pursue_location": p["location_text"],
                     "kaggle_text": k["description_text"][:350],
                     "pursue_text": p_snippet,
@@ -1019,6 +1237,7 @@ def explore(df: pd.DataFrame) -> None:
     geo.to_csv(DATA_PROCESSED / "ufo_geographic_trends.csv", index=False)
     save_bar(geo.head(12), "country", "records", "Kaggle UFO Records by Country", FIGURES / "ufo_geographic_trends.png")
     write_leaflet_geo_map(df)
+    write_offline_geo_map(df)
 
     rare_shapes = df[df["source"] == "kaggle"].copy()
     shape_freq = rare_shapes["object_shape"].fillna("unknown").replace("", "unknown").value_counts()
@@ -1055,7 +1274,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "## Matching Method",
         "Candidate retrieval uses broad transformer-based semantic retrieval when embeddings are available, rather than strict date/location blocking. Date and location are weak or missing in many PURSUE records, so they are used as scoring evidence after retrieval instead of hard filters. If transformer embeddings are unavailable, the fallback path still uses year/entity blocking to avoid an all-pairs comparison.",
         "",
-        "The base signals are transformer text similarity, TF-IDF text similarity, lexical text similarity, date, location, and entity/NER-style overlap. When `sentence-transformers` is installed, transformer cosine similarity is the primary text signal and TF-IDF/lexical overlap are secondary. If the transformer dependency is unavailable, the pipeline falls back to TF-IDF and lexical text similarity. The score is normalized over reliable available signals. Location is ignored when the PURSUE location is missing, non-terrestrial, or too broad. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.",
+        "The base signals are transformer text similarity, TF-IDF text similarity, lexical text similarity, date, location, and entity/NER-style overlap. When `sentence-transformers` is installed, transformer cosine similarity is the primary text signal and TF-IDF/lexical overlap are secondary. If the transformer dependency is unavailable, the pipeline falls back to TF-IDF and lexical text similarity. The score is normalized over reliable available signals. Location is ignored only when the PURSUE location is missing or non-terrestrial; broad terrestrial locations such as `Western United States` are scored as coarse geographic regions. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.",
         "",
         f"Current transformer weights are text {TEXT_WEIGHT_WITH_TRANSFORMER:.2f}, date {DATE_WEIGHT:.2f}, entity {ENTITY_WEIGHT_WITH_TRANSFORMER:.2f}, and location {LOCATION_WEIGHT_WITH_TRANSFORMER:.2f}. Date weight was deliberately reduced because PURSUE dates are often missing, broad, title-derived, or document/admin dates rather than confidently verified event dates.",
         "",
@@ -1086,6 +1305,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "- Temporal trends: `data/processed/ufo_temporal_trends.csv`.",
         "- Geographic trends: `data/processed/ufo_geographic_trends.csv`.",
         "- Interactive geographic map: `outputs/figures/ufo_geographic_map.html`.",
+        "- Offline geographic map image: `outputs/figures/ufo_geographic_map_offline.png`.",
         "- Rare sightings: `data/processed/ufo_rare_sightings.csv`.",
         "",
         "## Validation Examples",
@@ -1115,7 +1335,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "- `ufo_ner_entities.csv` is a lightweight rule-based NER-style table for locations, dates, organizations/military terms, object shapes, colors, and motion terms.",
         "- `pursue_text_kind=metadata_summary` means the official file could not be matched to extracted text and should be treated as weaker evidence.",
         "- `pursue_date_precision` distinguishes exact dates from year-only or missing dates.",
-        "- Blank `location_similarity` means location was deliberately ignored rather than scored as a real match.",
+        "- Blank `location_similarity` means location was deliberately ignored because the official location was missing or non-terrestrial.",
         "",
         "## Limitations",
         "- Some extracted official records describe file collections, launch summaries, or long historical reports rather than single events.",

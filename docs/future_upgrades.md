@@ -158,7 +158,7 @@ OCR quality metrics are approximate. They should downweight, not delete, unless 
 
 ## 7. Better Location Handling
 
-The current location logic deliberately ignores unusable official locations such as `Moon`, `Low Earth Orbit`, or missing values. This avoids nonsense matches, and the exploration now includes an interactive Leaflet map for geocoded Kaggle records. The remaining upgrade is better extraction and scoring of official locations.
+The current location logic deliberately ignores unusable official locations such as `Moon`, `Low Earth Orbit`, or missing values. Broad terrestrial official locations such as `Western United States`, `United States`, and several named sea/region labels are now scored with an offline coarse geospatial matcher against Kaggle state/country/coordinates. The exploration also includes both an interactive Leaflet map and an offline PNG map. The remaining upgrade is better extraction and scoring of more specific official locations from document text.
 
 Practical implementation:
 

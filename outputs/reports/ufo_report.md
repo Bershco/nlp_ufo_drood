@@ -8,7 +8,7 @@ Transformer similarity active for this run: True.
 ## Matching Method
 Candidate retrieval uses broad transformer-based semantic retrieval when embeddings are available, rather than strict date/location blocking. Date and location are weak or missing in many PURSUE records, so they are used as scoring evidence after retrieval instead of hard filters. If transformer embeddings are unavailable, the fallback path still uses year/entity blocking to avoid an all-pairs comparison.
 
-The base signals are transformer text similarity, TF-IDF text similarity, lexical text similarity, date, location, and entity/NER-style overlap. When `sentence-transformers` is installed, transformer cosine similarity is the primary text signal and TF-IDF/lexical overlap are secondary. If the transformer dependency is unavailable, the pipeline falls back to TF-IDF and lexical text similarity. The score is normalized over reliable available signals. Location is ignored when the PURSUE location is missing, non-terrestrial, or too broad. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.
+The base signals are transformer text similarity, TF-IDF text similarity, lexical text similarity, date, location, and entity/NER-style overlap. When `sentence-transformers` is installed, transformer cosine similarity is the primary text signal and TF-IDF/lexical overlap are secondary. If the transformer dependency is unavailable, the pipeline falls back to TF-IDF and lexical text similarity. The score is normalized over reliable available signals. Location is ignored only when the PURSUE location is missing or non-terrestrial; broad terrestrial locations such as `Western United States` are scored as coarse geographic regions. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.
 
 Current transformer weights are text 0.60, date 0.15, entity 0.15, and location 0.10. Date weight was deliberately reduced because PURSUE dates are often missing, broad, title-derived, or document/admin dates rather than confidently verified event dates.
 
@@ -34,14 +34,15 @@ Validation labels among top 20: {'likely same event': 15, 'possibly same event':
 - Temporal trends: `data/processed/ufo_temporal_trends.csv`.
 - Geographic trends: `data/processed/ufo_geographic_trends.csv`.
 - Interactive geographic map: `outputs/figures/ufo_geographic_map.html`.
+- Offline geographic map image: `outputs/figures/ufo_geographic_map_offline.png`.
 - Rare sightings: `data/processed/ufo_rare_sightings.csv`.
 
 ## Validation Examples
-- `possibly same event`: Kaggle `77008` vs PURSUE `FBI September 2023 Sighting - Serial 5`. Reason: next 32% of exported candidates by final score; uses extracted official document text; entity/keyword overlap is meaningful; score percentile 0.970; date support is weak; official location was not usable
-- `possibly same event`: Kaggle `70824` vs PURSUE `NASA-UAP-D7, Skylab Techincal Crew Debriefing 1973`. Reason: next 32% of exported candidates by final score; uses extracted official document text; entity/keyword overlap is meaningful; score percentile 0.968; date support is weak; official location was not usable
-- `possibly same event`: Kaggle `10290` vs PURSUE `Western US Event`. Reason: next 32% of exported candidates by final score; uses extracted official document text; score percentile 0.966; date support is weak; official location was not usable
-- `likely same event`: Kaggle `26520` vs PURSUE `Western US Event`. Reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 1.000; official date is missing or only inferred; official location was not usable
-- `likely same event`: Kaggle `1317` vs PURSUE `18_6369445_General_1948_Vol_1`. Reason: top 3% of exported candidates by final score; uses extracted official document text; entity/keyword overlap is meaningful; score percentile 0.998; official date is missing or only inferred; official location was not usable
+- `possibly same event`: Kaggle `78573` vs PURSUE `FBI September 2023 Sighting - Serial 3`. Reason: next 32% of exported candidates by final score; uses extracted official document text; location has broad geographic support; entity/keyword overlap is meaningful; score percentile 0.970; date support is weak
+- `possibly same event`: Kaggle `61511` vs PURSUE `FBI September 2023 Sighting - Serial 3`. Reason: next 32% of exported candidates by final score; uses extracted official document text; location has broad geographic support; entity/keyword overlap is meaningful; score percentile 0.968; date support is weak
+- `possibly same event`: Kaggle `31250` vs PURSUE `USPER Statement about UAP Sighting`. Reason: next 32% of exported candidates by final score; uses extracted official document text; location has broad geographic support; score percentile 0.966; official date is missing or only inferred
+- `likely same event`: Kaggle `1317` vs PURSUE `18_6369445_General_1948_Vol_1`. Reason: top 3% of exported candidates by final score; uses extracted official document text; entity/keyword overlap is meaningful; score percentile 1.000; official date is missing or only inferred; official location was not usable
+- `likely same event`: Kaggle `69241` vs PURSUE `38_143685_box_Incident_Summaries_101-172`. Reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.998; official date is missing or only inferred; official location was not usable
 
 ## Conclusions
 The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Transformer text similarity is the strongest retrieval signal; entity overlap and date proximity are useful supporting signals only when they are specific and trustworthy. Location is only useful when the official location is specific and terrestrial.
@@ -54,7 +55,7 @@ The strongest candidates are useful leads, but most are not strong enough to cla
 - `ufo_ner_entities.csv` is a lightweight rule-based NER-style table for locations, dates, organizations/military terms, object shapes, colors, and motion terms.
 - `pursue_text_kind=metadata_summary` means the official file could not be matched to extracted text and should be treated as weaker evidence.
 - `pursue_date_precision` distinguishes exact dates from year-only or missing dates.
-- Blank `location_similarity` means location was deliberately ignored rather than scored as a real match.
+- Blank `location_similarity` means location was deliberately ignored because the official location was missing or non-terrestrial.
 
 ## Limitations
 - Some extracted official records describe file collections, launch summaries, or long historical reports rather than single events.

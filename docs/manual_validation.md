@@ -22,7 +22,7 @@ If reviewing or changing labels by hand, use:
 Use these cues:
 
 - Dates: exact day is strong, same month/year is weaker.
-- Locations: city/state agreement or short geographic distance is strong. Blank `location_similarity` means the official location was not usable for matching.
+- Locations: city/state agreement or short geographic distance is strong. Broad official locations such as `Western United States` are scored as coarse regions. Blank `location_similarity` means the official location was missing or non-terrestrial.
 - Text: unique objects, motion, color, military references, and rare phrases matter more than generic words like "light".
 - Source differences: official records may be redacted, vague, or written in bureaucratic language.
 - `pursue_text_kind=extracted_document_text` means the snippet came from a downloaded public document.
