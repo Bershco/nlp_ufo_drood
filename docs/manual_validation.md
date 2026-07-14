@@ -23,6 +23,7 @@ Use these cues:
 
 - Dates: exact day is strong, same month/year is weaker.
 - Locations: city/state agreement or short geographic distance is strong. Broad official locations such as `Western United States` are scored as coarse regions. Blank `location_similarity` means the official location was missing or non-terrestrial.
+- Entities: `domain_entity_similarity` captures UFO-domain terms such as shape/color/motion/military words; `ner_similarity` captures lightweight spaCy named-entity overlap from text plus structured fields; `entity_similarity` is the blended score used in ranking.
 - Text: unique objects, motion, color, military references, and rare phrases matter more than generic words like "light".
 - Source differences: official records may be redacted, vague, or written in bureaucratic language.
 - `pursue_text_kind=extracted_document_text` means the snippet came from a downloaded public document.

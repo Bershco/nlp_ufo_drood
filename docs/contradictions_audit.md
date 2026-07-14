@@ -60,15 +60,7 @@ Scope reviewed: Python scripts in `nlp_ass5/`, repository markdown files in `doc
 - Current mitigation: `outputs/reports/ufo_top20_manual_review_helper.md` explicitly tells you to edit labels/notes if your judgment differs.
 - Manual decision needed: manually inspect the top 20 and edit `ufo_manual_validation_completed.csv` before final submission.
 
-### 2. Rule-Based NER Satisfies the Requirement Only at Baseline Level
-
-- Side A: the assignment explicitly asks to use Named Entity Recognition.
-- Side B: `nlp_ass5/ufo.py` implements transparent rule-based NER-style extraction, not a trained spaCy/transformer NER model.
-- Why it matters: this is defensible for a reproducible assignment, but a lecturer may expect a named NER library/model.
-- Current mitigation: docs and notebook clearly say "rule-based NER-style" rather than pretending it is spaCy NER.
-- Manual decision needed: decide whether baseline rule-based NER is enough, or add spaCy NER as an optional enhancement before submission.
-
-### 3. Interactive Map Depends on Internet Tile Loading
+### 2. Interactive Map Depends on Internet Tile Loading
 
 - Side A: `outputs/figures/ufo_geographic_map.html` is an interactive Leaflet/OpenStreetMap map.
 - Side B: the HTML loads Leaflet assets and map tiles from public CDNs; offline viewing will not fully render the base map.
@@ -100,5 +92,4 @@ Scope reviewed: Python scripts in `nlp_ass5/`, repository markdown files in `doc
    - add your own reasoning to `manual_notes`;
    - mark broad semantic matches with poor date/location support as weaker unless the text details are very specific.
 4. Pick at least five reviewed examples for the final report. Include both the automated view and your manual judgment.
-5. Decide whether to add trained spaCy NER. Current rule-based NER is documented, but trained NER would better match the assignment wording.
-6. Use `outputs/figures/ufo_geographic_map_offline.png` for an offline-safe geographic figure. The interactive HTML map can remain as an extra artifact.
+5. Use `outputs/figures/ufo_geographic_map_offline.png` for an offline-safe geographic figure. The interactive HTML map can remain as an extra artifact.

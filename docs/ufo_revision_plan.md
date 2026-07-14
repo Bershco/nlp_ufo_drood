@@ -21,7 +21,7 @@ This plan tracks the requested UFO-only review and implementation pass from July
 
 ## Work Items
 
-- [x] Add explicit NER/entity extraction outputs for UFO exploration.
+- [x] Add explicit lightweight spaCy NER/entity extraction outputs for UFO exploration.
 - [x] Add shape extraction from official text and document how Kaggle labels are normalized.
 - [x] Add map-based geographic visualization output.
 - [x] Add TF-IDF candidate similarity output.
@@ -40,7 +40,7 @@ This plan tracks the requested UFO-only review and implementation pass from July
 
 ## Findings
 
-- Common words and phrases still use tokenization because the assignment asks for frequent words/phrases, not only entities. NER is now added as a separate output so both requirements are covered.
+- Common words and phrases still use tokenization because the assignment asks for frequent words/phrases, not only entities. Lightweight spaCy NER is now added as a separate output and as part of candidate scoring, so both requirements are covered.
 - Kaggle shape labels are normalized into canonical shapes, and official shapes are inferred from document text where no clean field exists.
 - Geographic exploration now includes both a static matplotlib summary and an interactive Leaflet map HTML.
 - PURSUE date reliability is mixed. In the current unified table, 96 of 162 PURSUE records have no exact date, 56 have day-level dates, and 10 have year-only dates. The day-level values come from metadata/title/document context and cannot always be confidently treated as event dates, so date is no longer a hard blocking signal and its final-score weight was reduced from `0.25` to `0.15`.

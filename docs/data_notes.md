@@ -44,6 +44,8 @@ outputs/reports/ufo_top20_manual_review_helper.md
 
 Transformer matching is supported and documented in [GPU transformer run](gpu_transformer_run.md). Embedding caches are stored under `data/processed/embedding_cache/` and can be regenerated safely.
 
+NER uses lightweight spaCy `en_core_web_sm` when installed, plus structured fields and UFO-domain lexicons. Fresh environments should run `python -m spacy download en_core_web_sm` after installing `requirements.txt`; without that model the code falls back to the domain/structured entity path.
+
 ## Edwin Drood
 
 The script downloads Project Gutenberg eBook 564 from:

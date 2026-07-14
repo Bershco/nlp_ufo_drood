@@ -42,7 +42,7 @@ Cross-encoders are slower than embeddings, so they should be used only after blo
 
 ## 2. Structured Event Facet Extraction
 
-Instead of comparing raw text only, extract comparable event facets from both sources. This makes the matching more explainable and less dependent on noisy OCR wording. A first lightweight version now exists through canonical shape normalization and rule-based NER-style extraction; the future upgrade is to make these facets richer and more reliable.
+Instead of comparing raw text only, extract comparable event facets from both sources. This makes the matching more explainable and less dependent on noisy OCR wording. A first lightweight version now exists through canonical shape normalization, structured fields, domain lexicons, and spaCy `en_core_web_sm` NER; the future upgrade is to make these facets richer and more reliable.
 
 Useful facets:
 
@@ -60,7 +60,7 @@ Practical implementation:
 
 - Add a `ufo_event_facets.csv` table with one row per record or document chunk.
 - Extend the deterministic regex/keyword rules that are now in the baseline.
-- Add optional spaCy or transformer-based extraction later for stronger NER.
+- Add a larger transformer-based NER model later if higher recall is needed.
 - Compute separate similarities for each facet and include them in the candidate export.
 
 Expected benefit:
@@ -261,7 +261,7 @@ Manual labels may be inconsistent. The labeling guide should define "likely", "p
 
 ## Recommended Upgrade Order
 
-1. Expand structured event facets beyond the current rule-based NER/shape baseline.
+1. Expand structured event facets beyond the current lightweight spaCy/domain NER and shape baseline.
 2. Improve official chunking and OCR quality scoring.
 3. Run a stronger embedding model comparison.
 4. Add cross-encoder or LLM reranking for top candidates.

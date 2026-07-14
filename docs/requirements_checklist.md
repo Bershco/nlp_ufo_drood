@@ -12,7 +12,7 @@ Root doc: [README](../README.md)
 - [x] Extracted PURSUE PDF text used where matched to metadata rows.
 - [x] Text, date, location, and entity/keyword similarity signals implemented.
 - [x] Explicit TF-IDF text similarity implemented as a secondary/fallback signal.
-- [x] Rule-based NER-style extraction implemented for places/locations, dates, organizations/military terms, shapes, colors, and motion terms.
+- [x] Lightweight spaCy NER implemented and blended with domain entity extraction for places/locations, dates, organizations/military terms, shapes, colors, and motion terms.
 - [x] Date scoring distinguishes exact day, near days, weeks, months, and same-year distance.
 - [x] Blocking/retrieval implemented to avoid naive all-pairs comparison; transformer runs use broad semantic top-k retrieval because official date/location metadata is weak.
 - [x] Weighted final score implemented.

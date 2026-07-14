@@ -12,202 +12,202 @@ Checklist for each pair:
 
 ## Top 20
 
-### Rank 1: Kaggle 1317 vs PURSUE 18_6369445_General_1948_Vol_1
+### Rank 1: Kaggle 10290 vs PURSUE Western US Event
 
 - Automated label: `likely same event`
-- Final score: `0.4982`
-- Dates: Kaggle `nan` vs PURSUE `1948-06-15`
-- Locations: Kaggle `white hall, ar, us [34.2739, -92.0908]` vs PURSUE `nan`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/18_6369445_general_1948_vol_1.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/18_6369445_General_1948_Vol_1.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; entity/keyword overlap is meaningful; score percentile 1.000; official date is missing or only inferred; official location was not usable
-
-### Rank 2: Kaggle 69241 vs PURSUE 38_143685_box_Incident_Summaries_101-172
-
-- Automated label: `likely same event`
-- Final score: `0.4971`
-- Dates: Kaggle `2003-08-24` vs PURSUE `nan`
-- Locations: Kaggle `watchung, nj, us [40.6378, -74.4514]` vs PURSUE `nan`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/38_143685_box7_incident_summaries_101-172.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/38_143685_box7_Incident_Summaries_101-172.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.998; official date is missing or only inferred; official location was not usable
-
-### Rank 3: Kaggle 10290 vs PURSUE Western US Event
-
-- Automated label: `likely same event`
-- Final score: `0.4905`
+- Final score: `0.5248`
 - Dates: Kaggle `2012-11-17` vs PURSUE `2023`
 - Locations: Kaggle `santa cruz, ca, us [36.9742, -122.0297]` vs PURSUE `Western United States`
 - Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
 - Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.996; date support is weak
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 1.000; date support is weak
 
-### Rank 4: Kaggle 61526 vs PURSUE Western US Event
+### Rank 2: Kaggle 61526 vs PURSUE Western US Event
 
 - Automated label: `likely same event`
-- Final score: `0.4834`
+- Final score: `0.5027`
 - Dates: Kaggle `2013-07-03` vs PURSUE `2023`
 - Locations: Kaggle `walla walla, wa, us [46.0647, -118.3419]` vs PURSUE `Western United States`
 - Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
 - Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.994; date support is weak
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.998; date support is weak
 
-### Rank 5: Kaggle 39456 vs PURSUE Western US Event
-
-- Automated label: `likely same event`
-- Final score: `0.4808`
-- Dates: Kaggle `2014-04-27` vs PURSUE `2023`
-- Locations: Kaggle `deer park, wa, us [47.9544, -117.4758]` vs PURSUE `Western United States`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.992; date support is weak
-
-### Rank 6: Kaggle 34137 vs PURSUE 38_143685_box_Incident_Summaries_101-172
+### Rank 3: Kaggle 68270 vs PURSUE 38_143685_box_Incident_Summaries_101-172
 
 - Automated label: `likely same event`
-- Final score: `0.4769`
-- Dates: Kaggle `1999-03-30` vs PURSUE `nan`
-- Locations: Kaggle `pittsburgh, pa, us [40.4406, -79.9961]` vs PURSUE `nan`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/38_143685_box7_incident_summaries_101-172.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/38_143685_box7_Incident_Summaries_101-172.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.990; official date is missing or only inferred; official location was not usable
-
-### Rank 7: Kaggle 17562 vs PURSUE Western US Event
-
-- Automated label: `likely same event`
-- Final score: `0.4744`
-- Dates: Kaggle `2011-01-21` vs PURSUE `2023`
-- Locations: Kaggle `midland, tx, us [31.9972, -102.0775]` vs PURSUE `Western United States`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.988; date support is weak
-
-### Rank 8: Kaggle 26533 vs PURSUE Western US Event
-
-- Automated label: `likely same event`
-- Final score: `0.4742`
-- Dates: Kaggle `2014-02-14` vs PURSUE `2023`
-- Locations: Kaggle `tucson, az, us [32.2217, -110.9258]` vs PURSUE `Western United States`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.986; date support is weak
-
-### Rank 9: Kaggle 2771 vs PURSUE USPER Statement about UAP Sighting
-
-- Automated label: `likely same event`
-- Final score: `0.474`
-- Dates: Kaggle `2005-10-18` vs PURSUE `nan`
-- Locations: Kaggle `hillsboro, ky, us [38.2933, -83.6589]` vs PURSUE `United States`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/usper-statement-redacted.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/USPER-Statement-Redacted.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location has broad geographic support; score percentile 0.984; official date is missing or only inferred
-
-### Rank 10: Kaggle 18767 vs PURSUE FBI September 2023 Sighting - Serial 3
-
-- Automated label: `likely same event`
-- Final score: `0.4701`
-- Dates: Kaggle `2013-12-17` vs PURSUE `2023-09-01`
-- Locations: Kaggle `woodstock, ga, us [34.1014, -84.5194]` vs PURSUE `United States`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/serial 5 redacted_redacted.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/Serial 5 Redacted_Redacted.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location has broad geographic support; entity/keyword overlap is meaningful; score percentile 0.982; date support is weak
-
-### Rank 11: Kaggle 31687 vs PURSUE 38_143685_box_Incident_Summaries_101-172
-
-- Automated label: `likely same event`
-- Final score: `0.4698`
-- Dates: Kaggle `2006-03-15` vs PURSUE `nan`
-- Locations: Kaggle `new britain, ct, us [41.6611, -72.7800]` vs PURSUE `nan`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/38_143685_box7_incident_summaries_101-172.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/38_143685_box7_Incident_Summaries_101-172.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.980; official date is missing or only inferred; official location was not usable
-
-### Rank 12: Kaggle 69389 vs PURSUE Western US Event
-
-- Automated label: `likely same event`
-- Final score: `0.4697`
-- Dates: Kaggle `2013-08-24` vs PURSUE `2023`
-- Locations: Kaggle `silverdale, wa, us [47.6447, -122.6936]` vs PURSUE `Western United States`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.978; date support is weak
-
-### Rank 13: Kaggle 19771 vs PURSUE USPER Statement about UAP Sighting
-
-- Automated label: `likely same event`
-- Final score: `0.4655`
-- Dates: Kaggle `2012-01-22` vs PURSUE `nan`
-- Locations: Kaggle `ocala, fl, us [29.1869, -82.1403]` vs PURSUE `United States`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/usper-statement-redacted.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/USPER-Statement-Redacted.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location has broad geographic support; score percentile 0.976; official date is missing or only inferred
-
-### Rank 14: Kaggle 55397 vs PURSUE FBI September 2023 Sighting - Serial 3
-
-- Automated label: `likely same event`
-- Final score: `0.4651`
-- Dates: Kaggle `1999-07-01` vs PURSUE `2023-09-01`
-- Locations: Kaggle `clover, sc, us [35.1111, -81.2267]` vs PURSUE `United States`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/serial 5 redacted_redacted.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/Serial 5 Redacted_Redacted.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location has broad geographic support; entity/keyword overlap is meaningful; score percentile 0.974; date support is weak
-
-### Rank 15: Kaggle 68270 vs PURSUE 38_143685_box_Incident_Summaries_101-172
-
-- Automated label: `likely same event`
-- Final score: `0.465`
+- Final score: `0.4896`
 - Dates: Kaggle `2000-08-21` vs PURSUE `nan`
 - Locations: Kaggle `eatontown, nj, us [40.2961, -74.0514]` vs PURSUE `nan`
 - Source link/file: `https://www.war.gov/medialink/ufo/release_1/38_143685_box7_incident_summaries_101-172.pdf`
 - Extracted text path: `data/manual_text/Release_1/Release_1/38_143685_box7_Incident_Summaries_101-172.pdf.txt`
-- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.972; official date is missing or only inferred; official location was not usable
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.996; official date is missing or only inferred; official location was not usable
 
-### Rank 16: Kaggle 78573 vs PURSUE FBI September 2023 Sighting - Serial 3
+### Rank 4: Kaggle 69389 vs PURSUE Western US Event
+
+- Automated label: `likely same event`
+- Final score: `0.4888`
+- Dates: Kaggle `2013-08-24` vs PURSUE `2023`
+- Locations: Kaggle `silverdale, wa, us [47.6447, -122.6936]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.994; date support is weak
+
+### Rank 5: Kaggle 2120 vs PURSUE 38_143685_box_Incident_Summaries_101-172
+
+- Automated label: `likely same event`
+- Final score: `0.4832`
+- Dates: Kaggle `2005-10-15` vs PURSUE `nan`
+- Locations: Kaggle `arlington, tx, us [32.7356, -97.1078]` vs PURSUE `nan`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/38_143685_box7_incident_summaries_101-172.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/38_143685_box7_Incident_Summaries_101-172.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.992; official date is missing or only inferred; official location was not usable
+
+### Rank 6: Kaggle 26520 vs PURSUE Western US Event
+
+- Automated label: `likely same event`
+- Final score: `0.4811`
+- Dates: Kaggle `nan` vs PURSUE `2023`
+- Locations: Kaggle `east glastonbury, ct, us [41.6942, -72.5342]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.990; official date is missing or only inferred
+
+### Rank 7: Kaggle 61162 vs PURSUE Western US Event
+
+- Automated label: `likely same event`
+- Final score: `0.4805`
+- Dates: Kaggle `2012-07-31` vs PURSUE `2023`
+- Locations: Kaggle `portland, or, us [45.5236, -122.6750]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.988; date support is weak
+
+### Rank 8: Kaggle 62696 vs PURSUE Western US Event
+
+- Automated label: `likely same event`
+- Final score: `0.4763`
+- Dates: Kaggle `2013-07-04` vs PURSUE `2023`
+- Locations: Kaggle `scotts valley, ca, us [37.0511, -122.0136]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.986; date support is weak
+
+### Rank 9: Kaggle 68579 vs PURSUE 38_143685_box_Incident_Summaries_101-172
+
+- Automated label: `likely same event`
+- Final score: `0.4741`
+- Dates: Kaggle `2004-08-02` vs PURSUE `nan`
+- Locations: Kaggle `cabo san lucas (mexico) [22.8905, -109.9167]` vs PURSUE `nan`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/38_143685_box7_incident_summaries_101-172.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/38_143685_box7_Incident_Summaries_101-172.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.984; official date is missing or only inferred; official location was not usable
+
+### Rank 10: Kaggle 34262 vs PURSUE Western US Event
+
+- Automated label: `likely same event`
+- Final score: `0.4728`
+- Dates: Kaggle `2013-03-30` vs PURSUE `2023`
+- Locations: Kaggle `miami, fl, us [25.7739, -80.1939]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.982; date support is weak
+
+### Rank 11: Kaggle 69241 vs PURSUE 38_143685_box_Incident_Summaries_101-172
+
+- Automated label: `likely same event`
+- Final score: `0.4715`
+- Dates: Kaggle `2003-08-24` vs PURSUE `nan`
+- Locations: Kaggle `watchung, nj, us [40.6378, -74.4514]` vs PURSUE `nan`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/38_143685_box7_incident_summaries_101-172.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/38_143685_box7_Incident_Summaries_101-172.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.980; official date is missing or only inferred; official location was not usable
+
+### Rank 12: Kaggle 39456 vs PURSUE Western US Event
+
+- Automated label: `likely same event`
+- Final score: `0.4702`
+- Dates: Kaggle `2014-04-27` vs PURSUE `2023`
+- Locations: Kaggle `deer park, wa, us [47.9544, -117.4758]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.978; date support is weak
+
+### Rank 13: Kaggle 32780 vs PURSUE 38_143685_box_Incident_Summaries_101-172
+
+- Automated label: `likely same event`
+- Final score: `0.4691`
+- Dates: Kaggle `2012-03-21` vs PURSUE `nan`
+- Locations: Kaggle `greensburg, pa, us [40.3014, -79.5392]` vs PURSUE `nan`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/38_143685_box7_incident_summaries_101-172.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/38_143685_box7_Incident_Summaries_101-172.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.976; official date is missing or only inferred; official location was not usable
+
+### Rank 14: Kaggle 22806 vs PURSUE Western US Event
+
+- Automated label: `likely same event`
+- Final score: `0.4688`
+- Dates: Kaggle `2014-01-25` vs PURSUE `2023`
+- Locations: Kaggle `kent, wa, us [47.3811, -122.2336]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.974; date support is weak
+
+### Rank 15: Kaggle 62491 vs PURSUE Western US Event
+
+- Automated label: `likely same event`
+- Final score: `0.4685`
+- Dates: Kaggle `2012-07-04` vs PURSUE `2023`
+- Locations: Kaggle `chicago, il, us [41.8500, -87.6500]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: top 3% of exported candidates by final score; uses extracted official document text; score percentile 0.972; date support is weak
+
+### Rank 16: Kaggle 45360 vs PURSUE Western US Event
 
 - Automated label: `possibly same event`
-- Final score: `0.4645`
-- Dates: Kaggle `1946-09-30` vs PURSUE `2023-09-01`
-- Locations: Kaggle `dome, az, us [32.7553, -114.3614]` vs PURSUE `United States`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/serial 5 redacted_redacted.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/Serial 5 Redacted_Redacted.pdf.txt`
-- Automated reason: next 32% of exported candidates by final score; uses extracted official document text; location has broad geographic support; entity/keyword overlap is meaningful; score percentile 0.970; date support is weak
+- Final score: `0.4685`
+- Dates: Kaggle `2008-05-03` vs PURSUE `2023`
+- Locations: Kaggle `earp, ca, us [34.1647, -114.3003]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: next 32% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.970; date support is weak
 
-### Rank 17: Kaggle 61511 vs PURSUE FBI September 2023 Sighting - Serial 3
-
-- Automated label: `possibly same event`
-- Final score: `0.4644`
-- Dates: Kaggle `2013-07-03` vs PURSUE `2023-09-01`
-- Locations: Kaggle `tumwater, wa, us [47.0075, -122.9081]` vs PURSUE `United States`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/serial 5 redacted_redacted.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/Serial 5 Redacted_Redacted.pdf.txt`
-- Automated reason: next 32% of exported candidates by final score; uses extracted official document text; location has broad geographic support; entity/keyword overlap is meaningful; score percentile 0.968; date support is weak
-
-### Rank 18: Kaggle 31250 vs PURSUE USPER Statement about UAP Sighting
+### Rank 17: Kaggle 32454 vs PURSUE Western US Event
 
 - Automated label: `possibly same event`
-- Final score: `0.464`
-- Dates: Kaggle `2013-03-13` vs PURSUE `nan`
-- Locations: Kaggle `ellington, ct, us [41.9039, -72.4703]` vs PURSUE `United States`
+- Final score: `0.4658`
+- Dates: Kaggle `2014-03-19` vs PURSUE `2023`
+- Locations: Kaggle `lewisville, tx, us [33.0461, -96.9939]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: next 32% of exported candidates by final score; uses extracted official document text; score percentile 0.968; date support is weak
+
+### Rank 18: Kaggle 19347 vs PURSUE USPER Statement about UAP Sighting
+
+- Automated label: `possibly same event`
+- Final score: `0.4653`
+- Dates: Kaggle `2011-12-20` vs PURSUE `nan`
+- Locations: Kaggle `friday harbor, wa, us [48.5344, -123.0158]` vs PURSUE `United States`
 - Source link/file: `https://www.war.gov/medialink/ufo/release_1/usper-statement-redacted.pdf`
 - Extracted text path: `data/manual_text/Release_1/Release_1/USPER-Statement-Redacted.pdf.txt`
 - Automated reason: next 32% of exported candidates by final score; uses extracted official document text; location has broad geographic support; score percentile 0.966; official date is missing or only inferred
 
-### Rank 19: Kaggle 28128 vs PURSUE USPER Statement about UAP Sighting
+### Rank 19: Kaggle 2771 vs PURSUE USPER Statement about UAP Sighting
 
 - Automated label: `possibly same event`
-- Final score: `0.4638`
-- Dates: Kaggle `2014-02-22` vs PURSUE `nan`
-- Locations: Kaggle `washington&#44 d.c., dc [38.9072, -77.0365]` vs PURSUE `United States`
+- Final score: `0.4643`
+- Dates: Kaggle `2005-10-18` vs PURSUE `nan`
+- Locations: Kaggle `hillsboro, ky, us [38.2933, -83.6589]` vs PURSUE `United States`
 - Source link/file: `https://www.war.gov/medialink/ufo/release_1/usper-statement-redacted.pdf`
 - Extracted text path: `data/manual_text/Release_1/Release_1/USPER-Statement-Redacted.pdf.txt`
 - Automated reason: next 32% of exported candidates by final score; uses extracted official document text; location has broad geographic support; score percentile 0.964; official date is missing or only inferred
 
-### Rank 20: Kaggle 45243 vs PURSUE 38_143685_box_Incident_Summaries_101-172
+### Rank 20: Kaggle 17562 vs PURSUE Western US Event
 
 - Automated label: `possibly same event`
-- Final score: `0.4635`
-- Dates: Kaggle `2010-05-31` vs PURSUE `nan`
-- Locations: Kaggle `thousand oaks, ca, us [34.1706, -118.8367]` vs PURSUE `nan`
-- Source link/file: `https://www.war.gov/medialink/ufo/release_1/38_143685_box7_incident_summaries_101-172.pdf`
-- Extracted text path: `data/manual_text/Release_1/Release_1/38_143685_box7_Incident_Summaries_101-172.pdf.txt`
-- Automated reason: next 32% of exported candidates by final score; uses extracted official document text; score percentile 0.962; official date is missing or only inferred; official location was not usable
+- Final score: `0.4637`
+- Dates: Kaggle `2011-01-21` vs PURSUE `2023`
+- Locations: Kaggle `midland, tx, us [31.9972, -102.0775]` vs PURSUE `Western United States`
+- Source link/file: `https://www.war.gov/medialink/ufo/release_1/western_us_event_slides_5.08.2026.pdf`
+- Extracted text path: `data/manual_text/Release_1/Release_1/Western_US_Event_Slides_5.08.2026.pdf.txt`
+- Automated reason: next 32% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.962; date support is weak

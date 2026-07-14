@@ -8,6 +8,7 @@ This repository contains a compact, reproducible solution scaffold for the two N
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+python -m spacy download en_core_web_sm
 python -m nlp_ass5.run_all
 ```
 
@@ -20,7 +21,7 @@ Outputs are written to:
 
 ## Assignment Coverage
 
-- UFO/UAP pipeline: unified schema, NLP exploration, semantic retrieval/matching, weighted scoring, and manual-validation template.
+- UFO/UAP pipeline: unified schema, NLP exploration, lightweight spaCy/domain NER, semantic retrieval/matching, weighted scoring, and manual-validation template.
 - Manual PURSUE document bundles: extracted locally, indexed, and used for official document text where matched.
 - Edwin Drood pipeline: text preparation, character analysis, suspect scoring, clue extraction, Dickens comparison hooks, visualizations, and generated report.
 

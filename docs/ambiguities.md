@@ -14,7 +14,7 @@ Manual public PURSUE downloads were added and text was extracted where possible.
 
 ## NER Requirement
 
-Full spaCy NER is optional because model downloads are heavy for a timed assignment. Decision: implement lightweight regex/entity keyword extraction and keep the design modular so spaCy can be plugged in later.
+Heavy transformer NER is avoided because it adds runtime and dependency cost. Decision: use lightweight spaCy `en_core_web_sm` NER where available, blended with structured fields and domain lexicons; this keeps the requirement explicit without requiring GPU.
 
 ## Dickens Comparison
 

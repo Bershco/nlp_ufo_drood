@@ -51,6 +51,9 @@ COLOR_TERMS = ["red", "orange", "blue", "green", "white", "yellow", "silver", "b
 MOTION_TERMS = ["hover", "hovering", "accelerate", "accelerated", "turn", "turned", "descend", "descending", "rise", "rising", "disappear", "vanish", "formation"]
 MILITARY_TERMS = ["military", "base", "aircraft", "radar", "pilot", "navy", "army", "fbi", "missile", "air force", "nasa", "cia", "faa"]
 ENTITY_TERMS = SHAPE_TERMS + COLOR_TERMS + MOTION_TERMS + MILITARY_TERMS + ["weather", "cloud"]
+SPACY_MODEL = os.environ.get("UFO_SPACY_MODEL", "en_core_web_sm")
+SPACY_ENTITY_LABELS = {"PERSON", "ORG", "GPE", "LOC", "FAC", "DATE", "NORP", "EVENT"}
+SPACY_MAX_TEXT_CHARS = int(os.environ.get("UFO_SPACY_MAX_TEXT_CHARS", "5000"))
 LOCATION_HINTS = [
     "vandenberg", "roswell", "wright patterson", "nellis", "groom lake", "oak ridge",
     "washington", "turkmenistan", "georgia", "syria", "iraq", "persian gulf",
@@ -117,6 +120,8 @@ LOCATION_WEIGHT_WITH_TRANSFORMER = 0.10
 TEXT_WEIGHT_WITHOUT_TRANSFORMER = 0.45
 ENTITY_WEIGHT_WITHOUT_TRANSFORMER = 0.20
 LOCATION_WEIGHT_WITHOUT_TRANSFORMER = 0.20
+_SPACY_NLP = None
+_SPACY_AVAILABLE: bool | None = None
 
 
 def first_existing_column(df: pd.DataFrame, candidates: list[str]) -> str | None:
@@ -322,7 +327,105 @@ def entity_hits(text: str) -> list[str]:
     return hits + [f"YEAR_{year}" for year in years[:5]]
 
 
-def extract_named_entities(row: pd.Series) -> list[dict[str, str]]:
+def get_spacy_nlp():
+    global _SPACY_NLP, _SPACY_AVAILABLE
+    if _SPACY_AVAILABLE is False:
+        return None
+    if _SPACY_NLP is not None:
+        return _SPACY_NLP
+    try:
+        import spacy
+
+        _SPACY_NLP = spacy.load(SPACY_MODEL, exclude=["parser", "tagger", "lemmatizer", "attribute_ruler"])
+        _SPACY_NLP.max_length = max(_SPACY_NLP.max_length, SPACY_MAX_TEXT_CHARS + 1000)
+        _SPACY_AVAILABLE = True
+        return _SPACY_NLP
+    except Exception:
+        _SPACY_AVAILABLE = False
+        return None
+
+
+def normalize_ner_value(label: str, value: object) -> str:
+    text = clean_text(value).lower()
+    if not text or text in {"nan", "none", "n/a", "na"}:
+        return ""
+    text = re.sub(r"^[^a-z0-9]+|[^a-z0-9]+$", "", text)
+    if not text:
+        return ""
+    if label in {"GPE", "LOC"}:
+        state = normalized_state(text)
+        country = normalized_country(text)
+        if state and len(text) <= 20:
+            return f"state:{state}"
+        if country in COUNTRY_ALIASES.values() and len(text) <= 30:
+            return f"country:{country}"
+    if label == "ORG":
+        aliases = {"dod": "department of defense", "usaf": "air force", "u.s. air force": "air force"}
+        text = aliases.get(text, text)
+    return f"{label.lower()}:{text}"
+
+
+def spacy_entities_for_text(text: object, nlp=None) -> set[str]:
+    clean = clean_text(text)
+    if not clean:
+        return set()
+    nlp = nlp or get_spacy_nlp()
+    if nlp is None:
+        return set()
+    doc = nlp(clean[:SPACY_MAX_TEXT_CHARS])
+    entities: set[str] = set()
+    for ent in doc.ents:
+        if ent.label_ not in SPACY_ENTITY_LABELS:
+            continue
+        value = normalize_ner_value(ent.label_, ent.text)
+        if value:
+            entities.add(value)
+    return entities
+
+
+def spacy_entities_for_texts(texts: list[str]) -> list[set[str]]:
+    nlp = get_spacy_nlp()
+    if nlp is None:
+        return [set() for _ in texts]
+    clipped = [clean_text(text)[:SPACY_MAX_TEXT_CHARS] for text in texts]
+    results: list[set[str]] = []
+    for doc in nlp.pipe(clipped, batch_size=128):
+        entities: set[str] = set()
+        for ent in doc.ents:
+            if ent.label_ not in SPACY_ENTITY_LABELS:
+                continue
+            value = normalize_ner_value(ent.label_, ent.text)
+            if value:
+                entities.add(value)
+        results.append(entities)
+    return results
+
+
+def structured_ner_entities(row: pd.Series) -> set[str]:
+    entities: set[str] = set()
+    for field in ["city", "state", "country", "location_text"]:
+        value = clean_text(row.get(field, ""))
+        if not value:
+            continue
+        label = "GPE" if field in {"city", "state", "country"} else "LOC"
+        normalized = normalize_ner_value(label, value)
+        if normalized:
+            entities.add(normalized)
+    date_value = clean_text(row.get("date", ""))
+    if date_value:
+        normalized = normalize_ner_value("DATE", date_value)
+        if normalized:
+            entities.add(normalized)
+    return entities
+
+
+def row_ner_entities(row: pd.Series, text_entities: set[str] | None = None) -> set[str]:
+    entities = set(text_entities or set())
+    entities |= structured_ner_entities(row)
+    return entities
+
+
+def extract_named_entities(row: pd.Series, spacy_entities: set[str] | None = None) -> list[dict[str, str]]:
     text = str(row.get("description_text", ""))
     lowered = clean_text(text).lower()
     entities: list[dict[str, str]] = []
@@ -357,6 +460,9 @@ def extract_named_entities(row: pd.Series) -> list[dict[str, str]]:
     for motion in MOTION_TERMS:
         if re.search(rf"\b{re.escape(motion)}\b", lowered):
             add("MOTION", motion, "motion_lexicon")
+    for entity in (spacy_entities if spacy_entities is not None else spacy_entities_for_text(text)):
+        label, _, value = entity.partition(":")
+        add(label.upper(), value, "spacy_en_core_web_sm")
     return entities
 
 
@@ -669,7 +775,7 @@ def validation_notes(row: pd.Series, label: str) -> str:
     if text < 0.08:
         weak_reasons.append("direct text similarity is low")
     if entity >= 0.5:
-        strong_reasons.append("entity/keyword overlap is meaningful")
+        strong_reasons.append("NER/entity overlap is meaningful")
     if pd.notna(percentile):
         strong_reasons.append(f"score percentile {percentile:.3f}")
     return "; ".join(strong_reasons + weak_reasons)
@@ -757,7 +863,7 @@ def normalized_state(value: object) -> str:
         return ""
     if state in US_STATE_ABBREVIATIONS:
         return state
-    return US_STATE_NAMES.get(state, state)
+    return US_STATE_NAMES.get(state, "")
 
 
 def row_lat_lon(row: pd.Series) -> tuple[float, float] | None:
@@ -909,6 +1015,22 @@ def entity_similarity(a: str, b: str) -> float:
     return len(ea & eb) / len(ea | eb)
 
 
+def ner_similarity(a_entities: set[str], b_entities: set[str]) -> float:
+    if not a_entities and not b_entities:
+        return np.nan
+    if not a_entities or not b_entities:
+        return 0.0
+    return len(a_entities & b_entities) / len(a_entities | b_entities)
+
+
+def blended_entity_similarity(domain_score: float, ner_score: float) -> float:
+    if pd.isna(domain_score):
+        domain_score = 0.0
+    if pd.isna(ner_score):
+        return float(domain_score)
+    return 0.45 * float(domain_score) + 0.55 * float(ner_score)
+
+
 def jaccard(a: set[str], b: set[str]) -> float:
     if not a or not b:
         return 0.0
@@ -1004,7 +1126,7 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
             "pursue_text_kind", "kaggle_source_file_or_link", "pursue_source_file_or_link", "pursue_extracted_text_path",
             "transformer_similarity", "lexical_text_similarity", "tfidf_text_similarity", "text_similarity",
             "location_similarity", "date_similarity",
-            "entity_similarity", "final_score", "match_explanation",
+            "domain_entity_similarity", "ner_similarity", "entity_similarity", "final_score", "match_explanation",
             "manual_label", "manual_notes",
         ])
         empty.drop(columns=["manual_label", "manual_notes"]).to_csv(REPORTS / "ufo_candidate_matches.csv", index=False)
@@ -1016,9 +1138,15 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
     kaggle["year"] = pd.to_datetime(kaggle["date"], errors="coerce").dt.year
     kaggle["tokens"] = kaggle["description_text"].map(token_set)
     kaggle["entities"] = kaggle["description_text"].map(entity_set)
+    kaggle_text_ner = spacy_entities_for_texts(kaggle["description_text"].fillna("").astype(str).tolist())
+    kaggle["ner_entities"] = [row_ner_entities(row, ents) for (_, row), ents in zip(kaggle.iterrows(), kaggle_text_ner)]
     pursue["year"] = pd.to_datetime(pursue["date"], errors="coerce").dt.year
     pursue["tokens"] = pursue["description_text"].map(token_set)
     pursue["entities"] = pursue["description_text"].map(entity_set)
+    pursue_text_ner = spacy_entities_for_texts(
+        (pursue["record_id"].fillna("").astype(str) + " " + pursue["description_text"].fillna("").astype(str)).tolist()
+    )
+    pursue["ner_entities"] = [row_ner_entities(row, ents) for (_, row), ents in zip(pursue.iterrows(), pursue_text_ner)]
     semantic_context = prepare_semantic_context(kaggle, pursue)
     year_ranges = pursue.apply(
         lambda r: years_in_text(r.get("date", ""), r.get("record_id", ""), r.get("description_text", "")),
@@ -1052,7 +1180,7 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                     cheap_candidates.append((sem_for_rank, idx))
         else:
             for idx, k in block.iterrows():
-                ent = jaccard(k["entities"], p["entities"])
+                ent = max(jaccard(k["entities"], p["entities"]), ner_similarity(k["ner_entities"], p["ner_entities"]))
                 txt_cheap = jaccard(k["tokens"], p["tokens"])
                 dat_cheap = date_or_range_similarity(k["date"], p["date"], p["date_precision"], p["year_min"], p["year_max"])
                 dat_for_rank = 0.0 if pd.isna(dat_cheap) else dat_cheap
@@ -1063,7 +1191,10 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
             k = kaggle.loc[idx]
             transformer_score = semantic_scores.get(int(idx), np.nan)
             p_snippet = semantic_snippets.get(int(idx)) or candidate_snippet(p["description_text"], k["description_text"])
-            ent = jaccard(k["entities"], p["entities"])
+            domain_ent = jaccard(k["entities"], p["entities"])
+            snippet_ner = spacy_entities_for_text(p_snippet) | structured_ner_entities(p)
+            ner_ent = ner_similarity(k["ner_entities"], snippet_ner or p["ner_entities"])
+            ent = blended_entity_similarity(domain_ent, ner_ent)
             dat = date_or_range_similarity(k["date"], p["date"], p["date_precision"], p["year_min"], p["year_max"])
             lexical = text_similarity(k["description_text"], p_snippet)
             tfidf = tfidf_similarity(k["description_text"], p_snippet)
@@ -1092,6 +1223,8 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                     "text_similarity": round(transformer_score, 4) if pd.notna(transformer_score) else round(lexical, 4),
                     "location_similarity": "" if pd.isna(loc) else round(loc, 4),
                     "date_similarity": "" if pd.isna(dat) else round(dat, 4),
+                    "domain_entity_similarity": round(domain_ent, 4),
+                    "ner_similarity": round(ner_ent, 4),
                     "entity_similarity": round(ent, 4),
                     "final_score": round(final, 4),
                     "match_explanation": scoring_notes,
@@ -1200,10 +1333,11 @@ def explore(df: pd.DataFrame) -> None:
 
     entity_rows = []
     ner_rows = []
-    for _, row in df.iterrows():
+    spacy_entity_sets = spacy_entities_for_texts(df["description_text"].fillna("").astype(str).tolist())
+    for (_, row), row_spacy_entities in zip(df.iterrows(), spacy_entity_sets):
         for entity in entity_hits(row["description_text"]):
             entity_rows.append({"source": row["source"], "entity": entity})
-        ner_rows.extend(extract_named_entities(row))
+        ner_rows.extend(extract_named_entities(row, row_ner_entities(row, row_spacy_entities)))
     entities = pd.DataFrame(entity_rows)
     if not entities.empty:
         entity_counts = entities.groupby(["source", "entity"]).size().reset_index(name="count").sort_values("count", ascending=False)
@@ -1274,7 +1408,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "## Matching Method",
         "Candidate retrieval uses broad transformer-based semantic retrieval when embeddings are available, rather than strict date/location blocking. Date and location are weak or missing in many PURSUE records, so they are used as scoring evidence after retrieval instead of hard filters. If transformer embeddings are unavailable, the fallback path still uses year/entity blocking to avoid an all-pairs comparison.",
         "",
-        "The base signals are transformer text similarity, TF-IDF text similarity, lexical text similarity, date, location, and entity/NER-style overlap. When `sentence-transformers` is installed, transformer cosine similarity is the primary text signal and TF-IDF/lexical overlap are secondary. If the transformer dependency is unavailable, the pipeline falls back to TF-IDF and lexical text similarity. The score is normalized over reliable available signals. Location is ignored only when the PURSUE location is missing or non-terrestrial; broad terrestrial locations such as `Western United States` are scored as coarse geographic regions. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.",
+        "The base signals are transformer text similarity, TF-IDF text similarity, lexical text similarity, date, location, and entity overlap. Entity overlap blends UFO-domain keyword overlap with lightweight spaCy NER (`en_core_web_sm`) when the model is installed. When `sentence-transformers` is installed, transformer cosine similarity is the primary text signal and TF-IDF/lexical overlap are secondary. If the transformer dependency is unavailable, the pipeline falls back to TF-IDF and lexical text similarity. The score is normalized over reliable available signals. Location is ignored only when the PURSUE location is missing or non-terrestrial; broad terrestrial locations such as `Western United States` are scored as coarse geographic regions. Metadata-only PURSUE rows are penalized because they are document descriptions rather than extracted incident text.",
         "",
         f"Current transformer weights are text {TEXT_WEIGHT_WITH_TRANSFORMER:.2f}, date {DATE_WEIGHT:.2f}, entity {ENTITY_WEIGHT_WITH_TRANSFORMER:.2f}, and location {LOCATION_WEIGHT_WITH_TRANSFORMER:.2f}. Date weight was deliberately reduced because PURSUE dates are often missing, broad, title-derived, or document/admin dates rather than confidently verified event dates.",
         "",
@@ -1300,7 +1434,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "- Common terms: `data/processed/ufo_top_terms.csv`.",
         "- Common phrases: `data/processed/ufo_common_phrases.csv`.",
         "- Entity/keyword counts by source: `data/processed/ufo_entity_counts_by_source.csv`.",
-        "- Rule-based NER-style entities: `data/processed/ufo_ner_entities.csv` and `data/processed/ufo_ner_summary.csv`.",
+        "- spaCy plus domain-lexicon NER entities: `data/processed/ufo_ner_entities.csv` and `data/processed/ufo_ner_summary.csv`.",
         "- Civilian vs official language comparison: `data/processed/ufo_source_language_comparison.csv`.",
         "- Temporal trends: `data/processed/ufo_temporal_trends.csv`.",
         "- Geographic trends: `data/processed/ufo_geographic_trends.csv`.",
@@ -1325,14 +1459,14 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
     lines.extend([
         "",
         "## Conclusions",
-        "The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Transformer text similarity is the strongest retrieval signal; entity overlap and date proximity are useful supporting signals only when they are specific and trustworthy. Location is only useful when the official location is specific and terrestrial.",
+        "The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Transformer text similarity is the strongest retrieval signal; spaCy/domain entity overlap and date proximity are useful supporting signals only when they are specific and trustworthy. Location is only useful when the official location is specific and terrestrial.",
         "",
         "## Data Interpretation Notes",
         "- `pursue_text` in the candidate CSV is a relevant extracted-document snippet when available; otherwise it is a metadata snippet.",
         "- `transformer_similarity` is cosine similarity between the Kaggle report and the best official document chunk when embeddings are available.",
         "- `tfidf_text_similarity` is explicit TF-IDF cosine similarity over the candidate snippets; it is secondary to transformer similarity when embeddings are active.",
         "- `lexical_text_similarity` is the older token/string overlap score and remains useful as a secondary/fallback signal.",
-        "- `ufo_ner_entities.csv` is a lightweight rule-based NER-style table for locations, dates, organizations/military terms, object shapes, colors, and motion terms.",
+        "- `ufo_ner_entities.csv` combines lightweight spaCy NER for people, organizations, places, facilities, events, and dates with domain lexicons for military terms, object shapes, colors, and motion terms.",
         "- `pursue_text_kind=metadata_summary` means the official file could not be matched to extracted text and should be treated as weaker evidence.",
         "- `pursue_date_precision` distinguishes exact dates from year-only or missing dates.",
         "- Blank `location_similarity` means location was deliberately ignored because the official location was missing or non-terrestrial.",
@@ -1344,7 +1478,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "- The earlier strict year-blocking and lexical-heavy approach could miss plausible semantic matches when official dates were missing or unreliable; the current version uses semantic retrieval first and scores date afterward.",
         "- Earlier empty-text rows could create false perfect embedding similarities; empty Kaggle or official snippets are now excluded before semantic matching.",
         "- The candidate list is a triage artifact for manual validation, not a final claim that the events match.",
-        "- Rule-based NER is transparent and reproducible, but still weaker than a trained spaCy or transformer NER model.",
+        "- Lightweight spaCy NER is stronger than the earlier rule-only extraction, but it can still miss domain-specific bases, redacted names, OCR-damaged places, and UAP-specific phrases.",
     ])
     (REPORTS / "ufo_report.md").write_text("\n".join(lines), encoding="utf-8")
 

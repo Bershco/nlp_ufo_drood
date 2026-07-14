@@ -14,6 +14,7 @@ python -m venv .venv
 python -m pip install --upgrade pip
 pip install torch --index-url https://download.pytorch.org/whl/cu128
 pip install -r requirements.txt
+python -m spacy download en_core_web_sm
 python -m nlp_ass5.ufo
 ```
 
@@ -52,6 +53,9 @@ Candidate outputs include:
 - `transformer_similarity`: cosine similarity between Kaggle text and the best official document chunk.
 - `tfidf_text_similarity`: explicit TF-IDF cosine similarity over the candidate snippets.
 - `lexical_text_similarity`: the older token/string overlap score.
+- `domain_entity_similarity`: UFO-domain keyword/entity overlap.
+- `ner_similarity`: lightweight spaCy/entity overlap over text plus structured source fields.
+- `entity_similarity`: blended domain entity and spaCy NER signal used by the final score.
 - `text_similarity`: equals transformer similarity when available, otherwise lexical similarity.
 
 ## Matching Design
@@ -62,7 +66,7 @@ The pipeline embeds:
 - chunked PURSUE extracted document text;
 - metadata text for PURSUE rows without extracted documents.
 
-For each official record, transformer runs retrieve broad semantic top-k Kaggle candidates first because PURSUE date/location metadata is often weak. Date, location, TF-IDF, lexical, and entity signals are scored after retrieval. If transformer embeddings are unavailable, the fallback path still uses year/entity blocking to avoid naive all-pairs comparison.
+For each official record, transformer runs retrieve broad semantic top-k Kaggle candidates first because PURSUE date/location metadata is often weak. Date, location, TF-IDF, lexical, domain entity, and spaCy NER signals are scored after retrieval. If transformer embeddings are unavailable, the fallback path still uses year/entity blocking to avoid naive all-pairs comparison.
 
 ## Related Docs
 
