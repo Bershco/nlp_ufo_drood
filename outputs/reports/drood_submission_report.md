@@ -8,6 +8,8 @@ Suspects were scored on four normalized components: motive (25 points), opportun
 
 ## Suspects and clues
 
+![Suspect score components](../figures/drood_suspect_scores.png)
+
 ![Suspect score breakdown](../figures/drood_suspect_score_table.png)
 
 **Interpretive finding: John Jasper, not Neville Landless, is the primary suspect.** The 3.9-point numerical gap is small, and Jasper leads Neville in opportunity, suspicious language, and narrative relevance. Neville wins the total only because the novel surrounds its conspicuous suspect with unusually explicit jealousy and conflict vocabulary. Jasper's evidence is less overt but forms a stronger cross-scene sequence of motive, preparation, possible means, concealment, and behavior after Edwin disappears.
@@ -36,8 +38,6 @@ In *Drood*, crime language rises from 0.101 per 1,000 words in the opening third
 These patterns do not prove a solution, but they support two inferences: Neville's overt guilt signals may be misdirection, and the late identity/disguise increase leaves room for Edwin's survival or a Datchery-centered revelation.
 
 ![Motif comparison](../figures/drood_dickens_motifs.png)
-
-![Suspect score components](../figures/drood_suspect_scores.png)
 
 ## Conclusion
 
