@@ -4,15 +4,23 @@
 
 The Project Gutenberg text was stripped of boilerplate and divided into 23 chapters, paragraphs, and sentences. Alias rules tracked nine main characters. The analysis measured character frequency, chapter presence, paragraph co-occurrence, frequent contextual words, sentiment, and suspicious language.
 
-Suspects were scored on four normalized components: motive (25 points), opportunity (30), suspicious language (30), and semantic narrative relevance (15). This corrects the earlier scale mismatch in which opportunity overwhelmed the other evidence. Sentence embeddings retrieved clue candidates for motive, means, opium/double life, behavior after the disappearance, survival/disguise, and the Neville false-suspect theory. TF-IDF/K-means clustered scenes, and twelve final passages were audited against the source text.
+Suspects were scored on four normalized components: motive (25 points), opportunity (30), suspicious language (30), and semantic narrative relevance (15). Sentence embeddings retrieved clue candidates for motive, means, opium/double life, behavior after the disappearance, survival/disguise, and the Neville false-suspect theory. TF-IDF/K-means clustered scenes, and twelve final passages were audited against the source text.
 
 ![Suspect score components](../figures/drood_suspect_scores.png)
 
 ## Suspects and clues
 
-Neville Landless ranks first computationally at 86.339, followed by John Jasper at 82.476, Rosa Bud at 72.966, Mr. Crisparkle at 61.709, Helena Landless at 57.338, Durdles at 38.534, Dick Datchery at 30.161, and Princess Puffer at 0. The ranking does not automatically determine the literary conclusion. Neville's score is driven by explicit quarrel, jealousy, threats, proximity, a weapon, and blood—the conspicuous circumstantial case Dickens places before the reader.
+| Score component | Neville | Jasper | Rosa | Crisparkle | Helena | Durdles | Datchery | Puffer |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Motive (25) | 21.0 | 10.9 | 17.9 | 9.8 | 12.6 | 3.1 | 3.5 | 0.0 |
+| Opportunity (30) | 27.9 | 28.7 | 21.5 | 15.7 | 12.5 | 1.0 | 0.0 | 0.0 |
+| Suspicious language (30) | 24.2 | 28.0 | 18.5 | 23.1 | 22.3 | 24.9 | 19.5 | 0.0 |
+| Narrative relevance (15) | 13.2 | 14.9 | 15.0 | 13.0 | 10.0 | 9.4 | 7.2 | 0.0 |
+| **Total (100)** | **86.3** | **82.5** | **73.0** | **61.7** | **57.3** | **38.5** | **30.2** | **0.0** |
 
-The audited clue chain is more coherent for Jasper:
+**Interpretive finding: John Jasper—not Neville Landless—is the primary suspect.** The 3.9-point numerical gap is small, and Jasper leads Neville in opportunity, suspicious language, and narrative relevance. Neville wins the total only because the novel surrounds its conspicuous suspect with unusually explicit jealousy and conflict vocabulary. Jasper's evidence is less overt but forms a stronger cross-scene sequence of motive, preparation, possible means, concealment, and behavior after Edwin disappears.
+
+The audited clue chain supporting **Jasper** is:
 
 1. The opium-house figure later identified as Jasper acts out strangulation.
 2. Jasper admits secret opium use and a divided life.
@@ -39,6 +47,6 @@ These patterns do not prove a solution, but they support two inferences: Neville
 
 ## Conclusion
 
-John Jasper is the strongest literary suspect with **medium confidence**, even though Neville wins the surface-language score. Jasper has motive, possible method, preparation, access, secrecy, and suspicious post-disappearance behavior across several chapters. Neville has a deliberately obvious circumstantial case but also an explicit textual defender who believes him innocent.
+**John Jasper is the strongest literary suspect, with medium confidence.** The model's narrow preference for Neville reflects highly visible accusation language; the broader evidence favors Jasper because it connects motive, possible method, preparation, access, secrecy, and suspicious post-disappearance behavior across several chapters. Neville has a deliberately obvious circumstantial case but also an explicit textual defender who believes him innocent.
 
 Jasper probably attempted to kill Edwin, but completed murder cannot be established. No body or confession appears, Datchery's identity is unresolved, and Dickens's earlier identity/disguise patterns make survival plausible. NLP clarifies the distribution and progression of evidence; it cannot reconstruct Dickens's unwritten ending.

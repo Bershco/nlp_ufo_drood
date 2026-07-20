@@ -62,7 +62,7 @@ def save_bar(df: pd.DataFrame, x: str, y: str, title: str, path: Path, rotate: i
     ax.set_ylabel(y)
     ax.tick_params(axis="x", rotation=rotate)
     fig.tight_layout()
-    fig.savefig(path, dpi=160)
+    fig.savefig(path, dpi=300)
     plt.close(fig)
 
 

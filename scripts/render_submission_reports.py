@@ -35,8 +35,10 @@ def markdown_to_html(source: str, asset_dir: Path) -> str:
             blocks.append(f"<p>{inline_markup(' '.join(paragraph))}</p>")
             paragraph.clear()
 
-    for raw_line in source.splitlines():
-        line = raw_line.strip()
+    lines = source.splitlines()
+    index = 0
+    while index < len(lines):
+        line = lines[index].strip()
         image_match = re.fullmatch(r"!\[(.*?)\]\((.*?)\)", line)
         list_match = re.match(r"^\d+\.\s+(.*)", line)
         if not line:
@@ -53,14 +55,37 @@ def markdown_to_html(source: str, asset_dir: Path) -> str:
         elif image_match:
             flush_paragraph()
             source_image = (REPORT_DIR / image_match.group(2)).resolve()
-            image_path = asset_dir / source_image.name
             with Image.open(source_image) as figure:
-                figure.thumbnail((540, 270), Image.Resampling.LANCZOS)
-                figure.save(image_path)
+                pixel_width, pixel_height = figure.size
+            display_width = 624
+            display_height = round(display_width * pixel_height / pixel_width)
+            if display_height > 230:
+                display_height = 230
+                display_width = round(display_height * pixel_width / pixel_height)
             blocks.append(
-                f'<div class="chart"><img src="{image_path.as_uri()}" alt="{html.escape(image_match.group(1))}"><br>'
+                f'<div class="chart"><img src="{source_image.as_uri()}" width="{display_width}" height="{display_height}" '
+                f'alt="{html.escape(image_match.group(1))}"><br>'
                 f'<span class="caption">Figure: {html.escape(image_match.group(1))}</span></div>'
             )
+        elif (
+            line.startswith("|")
+            and index + 1 < len(lines)
+            and re.fullmatch(r"\|?[\s:|-]+\|?", lines[index + 1].strip())
+        ):
+            flush_paragraph()
+            headers = [cell.strip() for cell in line.strip("|").split("|")]
+            index += 2
+            rows: list[list[str]] = []
+            while index < len(lines) and lines[index].strip().startswith("|"):
+                rows.append([cell.strip() for cell in lines[index].strip().strip("|").split("|")])
+                index += 1
+            head = "".join(f"<th>{inline_markup(cell)}</th>" for cell in headers)
+            body = "".join(
+                "<tr>" + "".join(f"<td>{inline_markup(cell)}</td>" for cell in row) + "</tr>"
+                for row in rows
+            )
+            blocks.append(f'<table class="score-table"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>')
+            continue
         elif list_match:
             flush_paragraph()
             if not in_list:
@@ -69,6 +94,7 @@ def markdown_to_html(source: str, asset_dir: Path) -> str:
             blocks.append(f"<li>{inline_markup(list_match.group(1))}</li>")
         else:
             paragraph.append(line)
+        index += 1
     flush_paragraph()
     if in_list:
         blocks.append("</ol>")
@@ -83,17 +109,22 @@ def render(name: str, soffice: str) -> None:
         document = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
 @page {{ size: A4; margin: 13mm 15mm; }}
-body {{ font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.15;
-        color: #20242a; max-width: 180mm; margin: auto; }}
-h1 {{ font-size: 18pt; color: #18354f; margin: 0 0 5mm; }}
+html, body {{ direction: ltr; }}
+body {{ font-family: Arial, sans-serif; font-size: 9.2pt; line-height: 1.14;
+        color: #20242a; max-width: 180mm; margin: auto; text-align: left; }}
+h1 {{ font-size: 18pt; color: #18354f; margin: 0 0 5mm; clear: both; display: block; text-align: left; }}
 h2 {{ font-size: 12.5pt; color: #245678; margin: 4mm 0 1.5mm;
-      border-bottom: 0.4pt solid #9bb4c7; }}
-p {{ margin: 0 0 2.2mm; text-align: justify; }}
+      border-bottom: 0.4pt solid #9bb4c7; clear: both; display: block; text-align: left; }}
+p {{ margin: 0 0 2.2mm; text-align: left; clear: both; }}
 ol {{ margin: 0 0 2mm 6mm; padding-left: 4mm; }}
 li {{ margin-bottom: 1mm; }}
-.chart {{ margin: 2.5mm auto 3mm; text-align: center; page-break-inside: avoid; }}
+.chart {{ margin: 2.5mm auto 3mm; text-align: center; page-break-inside: avoid; clear: both; display: block; }}
 img {{ max-width: 165mm; max-height: 61mm; }}
 .caption {{ font-size: 8pt; color: #52606b; }}
+.score-table {{ width: 100%; border-collapse: collapse; margin: 2mm 0 3mm; font-size: 6.6pt; page-break-inside: avoid; clear: both; }}
+.score-table th {{ color: #18354f; background: #eaf1f6; font-weight: bold; }}
+.score-table th, .score-table td {{ border: 0.4pt solid #9bb4c7; padding: 1.1mm 0.7mm; text-align: center; }}
+.score-table th:first-child, .score-table td:first-child {{ text-align: left; white-space: nowrap; }}
 code {{ font-size: 8.5pt; }}
 </style></head><body>{body}</body></html>"""
         html_path.write_text(document, encoding="utf-8")

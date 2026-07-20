@@ -741,7 +741,7 @@ def write_offline_geo_map(df: pd.DataFrame, path: Path = FIGURES / "ufo_geograph
 
     fig.suptitle("Offline Geographic View of Kaggle UFO Reports", y=0.98)
     fig.tight_layout()
-    fig.savefig(path, dpi=180)
+    fig.savefig(path, dpi=300)
     plt.close(fig)
 
 
@@ -1510,7 +1510,7 @@ def explore(df: pd.DataFrame) -> None:
         ax.set_ylabel("Records")
         ax.set_yscale("log")
         fig.tight_layout()
-        fig.savefig(FIGURES / "ufo_temporal_trends.png", dpi=160)
+        fig.savefig(FIGURES / "ufo_temporal_trends.png", dpi=300)
         plt.close(fig)
 
     entity_rows = []
@@ -1655,7 +1655,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
     lines.extend([
         "",
         "## Conclusions",
-        "The system found several plausible thematic correspondences, especially reports involving orange or red orbs, but insufficient date, location, and distinctive-event evidence prevents confidently establishing a cross-source duplicate. Manual review classified 19 pairs as possibly the same event and one as probably not the same event; none met a defensible threshold for likely identity. This is a substantive result rather than a pipeline failure: the public PURSUE releases often provide only broad or missing incident metadata, and no additional public information is available to resolve it. Transformer similarity was effective for retrieving comparable sighting narratives, while TF-IDF, NER, location, and cautious date evidence helped reveal when semantic similarity represented a shared event type rather than one historical occurrence.",
+        "The system found several plausible thematic correspondences, especially reports involving orange or red orbs, but insufficient date, location, and distinctive-event evidence prevents confidently establishing a cross-source duplicate. Manual review classified 19 pairs as possibly the same event and one as probably not the same event; none met a defensible threshold for likely identity. This is a substantive result rather than a pipeline failure: redaction, missing incident dates, broad released locations, and other limits of the declassified PURSUE material remove precisely the evidence needed to confirm identity across sources. Transformer similarity was effective for retrieving comparable sighting narratives, while TF-IDF, NER, location, and cautious date evidence helped reveal when semantic similarity represented a shared event type rather than one historical occurrence.",
         "",
         "## Data Interpretation Notes",
         "- `pursue_text` in the candidate CSV is a relevant extracted-document snippet when available; otherwise it is a metadata snippet.",
@@ -1671,10 +1671,11 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "- Some extracted official records describe file collections, launch summaries, or long historical reports rather than single events.",
         "- OCR quality varies across scanned PDFs; some downloaded files were videos or malformed/unsupported documents.",
         "- Transformer similarity can surface semantically broad matches from long official reports, so date/entity/location support and manual validation remain important.",
-        "- The earlier strict year-blocking and lexical-heavy approach could miss plausible semantic matches when official dates were missing or unreliable; the current version uses semantic retrieval first and scores date afterward.",
-        "- Earlier empty-text rows could create false perfect embedding similarities; empty Kaggle or official snippets are now excluded before semantic matching.",
+        "- Semantic retrieval is performed before date scoring because official dates are frequently missing or cannot be identified confidently as incident dates.",
+        "- Rows with empty Kaggle or official text are excluded before semantic matching.",
         "- The candidate list is a triage artifact for manual validation, not a final claim that the events match.",
-        "- Lightweight spaCy NER is stronger than the earlier rule-only extraction, but it can still miss domain-specific bases, redacted names, OCR-damaged places, and UAP-specific phrases.",
+        "- Lightweight spaCy NER can miss domain-specific bases, redacted names, OCR-damaged places, and UAP-specific phrases.",
+        "- Declassified releases may redact or omit precise dates, locations, names, units, sensor details, and other identifying context; this directly weakens date, location, and entity comparison.",
     ])
     (REPORTS / "ufo_report.md").write_text("\n".join(lines), encoding="utf-8")
 

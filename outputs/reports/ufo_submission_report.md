@@ -16,6 +16,8 @@ Transformer embeddings were used for broad semantic retrieval because PURSUE dat
 
 NER identifies people, organizations, geopolitical entities, facilities, dates, and events. UFO-specific lexicons add shapes, colors, motion, military terms, and structured source fields. PDF-derived date and location mentions are retained as review evidence rather than automatically asserted as incident metadata, because official documents may mention several events, publication dates, or administrative dates.
 
+**Redaction and declassification constraints materially weaken the comparison.** Released PURSUE documents may omit or redact precise dates, locations, names, units, sensor details, and other identifying context. A visible year may describe publication, review, or administrative handling rather than the sighting itself. These omissions directly reduce date, location, and named-entity overlap, so even a genuine shared event may remain impossible to verify from the public record.
+
 ## Manual validation
 
 The top 20 candidates were manually reviewed. Nineteen were classified as **possibly the same event**, and one was classified as **probably not the same event**. None had enough distinctive, reliable evidence to justify **likely the same event**.
@@ -30,8 +32,8 @@ Five representative cases illustrate the result:
 
 ## Conclusion and limitations
 
-The system found several plausible thematic correspondences, especially reports involving orange or red orbs, but insufficient date, location, and distinctive-event evidence prevents confidently establishing a cross-source duplicate. This is a substantive result rather than a processing failure: the publicly released PURSUE material does not contain enough specific incident metadata to resolve the uncertainty.
+The system found several plausible thematic correspondences, especially reports involving orange or red orbs, but insufficient date, location, and distinctive-event evidence prevents confidently establishing a cross-source duplicate. This is a substantive result rather than a processing failure: redaction, missing incident dates, broad released locations, and other limits of the declassified PURSUE material remove precisely the evidence needed to confirm identity across sources.
 
-Transformer similarity was effective for retrieving comparable narratives. TF-IDF, NER, location, and cautious date evidence were most useful for showing when a high semantic score represented the same kind of sighting rather than the same historical occurrence. Remaining limitations include broad or missing public metadata, mixed date semantics, OCR noise, multi-incident historical documents, and generic vocabulary shared by unrelated sightings.
+Transformer similarity was effective for retrieving comparable narratives. TF-IDF, NER, location, and cautious date evidence were most useful for showing when a high semantic score represented the same kind of sighting rather than the same historical occurrence. Remaining limitations include redacted or withheld identifying information, broad or missing public metadata, absent or ambiguous incident dates, OCR noise, multi-incident historical documents, and generic vocabulary shared by unrelated sightings.
 
 ![Offline geographic distribution](../figures/ufo_geographic_map_offline.png)
