@@ -49,10 +49,11 @@ def markdown_to_html(source: str, asset_dir: Path) -> str:
                 in_list = False
         elif line.startswith("## "):
             flush_paragraph()
+            section_title = line[3:]
             blocks.append(
                 '<div class="section-heading" style="width:100%; clear:both; display:block; text-align:left; '
                 'margin:14px 0 6px -15px; padding:0 0 3px 0; border-bottom:1px solid #9bb4c7;">'
-                f'<span style="font-size:16px; font-weight:bold; color:#245678;">{inline_markup(line[3:])}</span></div>'
+                f'<span style="font-size:16px; font-weight:bold; color:#245678;">{inline_markup(section_title)}</span></div>'
             )
         elif line.startswith("# "):
             flush_paragraph()
@@ -111,11 +112,13 @@ def render(name: str, soffice: str) -> None:
     html_path = REPORT_DIR / f"{name}.html"
     with tempfile.TemporaryDirectory(prefix=f"{name}_") as temp_dir:
         body = markdown_to_html(markdown_path.read_text(encoding="utf-8"), Path(temp_dir))
+        body_font_size = "8.7pt" if name == "drood_submission_report" else "9pt"
+        body_line_height = "1.07" if name == "drood_submission_report" else "1.10"
         document = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
 @page {{ size: A4; margin: 13mm 15mm; }}
 html, body {{ direction: ltr; }}
-body {{ font-family: Arial, sans-serif; font-size: 9pt; line-height: 1.10;
+body {{ font-family: Arial, sans-serif; font-size: {body_font_size}; line-height: {body_line_height};
         color: #20242a; max-width: 180mm; margin: auto; text-align: left; }}
 h1 {{ font-size: 18pt; color: #18354f; margin: 0 0 5mm; clear: both; display: block; text-align: left; }}
 h2 {{ font-size: 12.5pt; color: #245678; margin: 4mm 0 1.5mm;
