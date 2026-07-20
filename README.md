@@ -8,7 +8,6 @@ This repository contains a compact, reproducible solution scaffold for the two N
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m spacy download en_core_web_sm
 python -m nlp_ass5.run_all
 ```
 
@@ -18,6 +17,8 @@ Outputs are written to:
 - `data/processed/` for structured CSV tables.
 - `outputs/figures/` for visualizations.
 - `outputs/reports/` for generated markdown/CSV summaries.
+
+The pipeline downloads spaCy's lightweight `en_core_web_sm` model on first use if it is not already installed. Set `UFO_AUTO_DOWNLOAD_SPACY=0` to skip the download and use the structured/domain-entity fallback.
 
 ## Assignment Coverage
 
@@ -34,7 +35,14 @@ data/raw/ufo/kaggle_ufo.csv
 The PURSUE collector uses the official schema when available and can also ingest a local CSV mirror.
 The current run uses PURSUE metadata records. If you obtain an official PURSUE CSV export, place it at `data/raw/ufo/pursue_metadata.csv`.
 
-For Colab-style submission, open [notebooks/assignment_pipeline.ipynb](notebooks/assignment_pipeline.ipynb).
+For Colab submission, open [notebooks/assignment_pipeline.ipynb](notebooks/assignment_pipeline.ipynb). It presents both completed assignments and can clone the repository automatically when opened as a standalone notebook.
+
+Final short reports are available as both Markdown and paginated PDF:
+
+- [UFO/UAP submission report](outputs/reports/ufo_submission_report.pdf)
+- [Edwin Drood submission report](outputs/reports/drood_submission_report.pdf)
+
+To rebuild the PDFs locally, run `python3 scripts/render_submission_reports.py` (LibreOffice is required only for this packaging step).
 
 ## Documentation Graph
 
@@ -49,6 +57,7 @@ Start here and follow links:
 - [Future upgrade ideas](docs/future_upgrades.md)
 - [UFO revision plan](docs/ufo_revision_plan.md)
 - [Contradictions audit](docs/contradictions_audit.md)
+- [Edwin Drood assignment explanation](docs/drood_assignment_explained.md)
 - [Final summary](docs/summary.md)
 
 ## Repository Status

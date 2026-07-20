@@ -1,8 +1,8 @@
-# UFO/UAP Report Draft
+# UFO/UAP Final Report
 
-Unified records loaded: 80494.
-Kaggle records: 80332. PURSUE records: 162.
-PURSUE rows with extracted document text: 138. Metadata-only PURSUE rows: 24.
+Unified records loaded: 80555.
+Kaggle records: 80332. PURSUE records: 223.
+PURSUE rows with extracted document text: 199 (138 metadata-attached rows and 61 standalone documents). Metadata-only PURSUE rows: 24.
 Transformer similarity active for this run: True.
 
 ## Matching Method
@@ -16,14 +16,14 @@ Rows with empty Kaggle text or empty official snippets are excluded from semanti
 
 Date similarity is based on absolute day distance, so cross-year near misses such as December 31 versus January 2 are still treated as close. Full-date gaps use tiers from exact day through 365 days; year-only official dates use a weaker same-year/plus-minus-one-year fallback.
 
-Validation labels are relative rank bands over the exported candidate pool: top 3% `likely same event`, next 32% `possibly same event`, and the remainder `probably not same event`. These labels do not mean confirmed identity.
+Automated rank bands divide the exported candidate pool into the top 3%, next 32%, and remaining candidates. Their text resembles the three requested review labels for prioritization, but they are not human judgments or claims of event identity. Human decisions belong only in `manual_label` and `manual_notes`.
 
 ## Candidate Matches
 Candidate matches are exported to `outputs/reports/ufo_candidate_matches.csv`.
-All exported candidates include formula labels and notes.
-Validation labels among all exported candidates: {'probably not same event': 325, 'possibly same event': 160, 'likely same event': 15}.
+All exported candidates include automated rank bands and notes, plus separate blank fields for human review.
+Automated rank bands among all exported candidates: {'probably not same event': 325, 'possibly same event': 160, 'likely same event': 15}.
 The top-20 manual-review working file is `outputs/reports/ufo_manual_validation_completed.csv`.
-Validation labels among top 20: {'likely same event': 15, 'possibly same event': 5}.
+Completed human labels among top 20: {'possibly same event': 19, 'probably not same event': 1}.
 
 ## Exploration Outputs
 - Common terms: `data/processed/ufo_top_terms.csv`.
@@ -38,14 +38,29 @@ Validation labels among top 20: {'likely same event': 15, 'possibly same event':
 - Rare sightings: `data/processed/ufo_rare_sightings.csv`.
 
 ## Validation Examples
-- `possibly same event`: Kaggle `45360` vs PURSUE `Western US Event`. Reason: next 32% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.970; date support is weak
-- `possibly same event`: Kaggle `32454` vs PURSUE `Western US Event`. Reason: next 32% of exported candidates by final score; uses extracted official document text; score percentile 0.968; date support is weak
-- `possibly same event`: Kaggle `19347` vs PURSUE `USPER Statement about UAP Sighting`. Reason: next 32% of exported candidates by final score; uses extracted official document text; location has broad geographic support; score percentile 0.966; official date is missing or only inferred
-- `likely same event`: Kaggle `10290` vs PURSUE `Western US Event`. Reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 1.000; date support is weak
-- `likely same event`: Kaggle `61526` vs PURSUE `Western US Event`. Reason: top 3% of exported candidates by final score; uses extracted official document text; location is geographically compatible; score percentile 0.998; date support is weak
+
+### Rank 1: Kaggle `10290` vs PURSUE `Western US Event`
+**Manual classification:** possibly same event.
+Both texts describe combinations of orange/red orb-like lights, and Santa Cruz is compatible with the official record's broad Western United States location. This makes the pair thematically plausible. However, the official 2023 value cannot be verified as the event date, while the Kaggle report is from 2012, and the color/orb pattern is common across many sightings. The pair is therefore possible, not verified.
+
+### Rank 3: Kaggle `68270` vs PURSUE `38_143685_box_Incident_Summaries_101-172`
+**Manual classification:** possibly same event.
+The descriptions share a similar sequence of unidentified lights or objects, but the official incident-summary collection supplies neither a usable location nor a reliable event date for this particular passage. The semantic model retrieved a comparable event description, yet the low direct TF-IDF and NER overlap show that the wording and specific entities are not distinctive enough to establish identity.
+
+### Rank 6: Kaggle `26520` vs PURSUE `Western US Event`
+**Manual classification:** possibly same event.
+The descriptions again share orange/red orb characteristics, but the Kaggle location is East Glastonbury, Connecticut, whereas the official location is Western United States. The deliberately low location score of 0.15 captures this conflict. Because PURSUE dates may be administrative and the visual description remains similar, the pair is retained as possible, although geographic evidence argues against it.
+
+### Rank 9: Kaggle `68579` vs PURSUE `38_143685_box_Incident_Summaries_101-172`
+**Manual classification:** probably not same event.
+This is the clearest negative example. The Kaggle report is from Cabo San Lucas, Mexico, while the PURSUE passage has no usable location. The reported durations and event descriptions differ, TF-IDF overlap is zero, and named-entity overlap is zero. Semantic similarity alone appears to have retrieved the same broad class of sighting rather than the same incident, so the pair is classified as probably not the same event.
+
+### Rank 18: Kaggle `19347` vs PURSUE `USPER Statement about UAP Sighting`
+**Manual classification:** possibly same event.
+Both reports concern orb-like phenomena and the Kaggle sighting occurred in Friday Harbor, Washington, which is compatible with the official record's very broad United States label. Nevertheless, that location covers the entire country and the official date is unavailable. The shared orb vocabulary makes this a useful lead, but it does not provide enough specificity for a likely-match claim.
 
 ## Conclusions
-The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Transformer text similarity is the strongest retrieval signal; spaCy/domain entity overlap and date proximity are useful supporting signals only when they are specific and trustworthy. Location is only useful when the official location is specific and terrestrial.
+The system found several plausible thematic correspondences, especially reports involving orange or red orbs, but insufficient date, location, and distinctive-event evidence prevents confidently establishing a cross-source duplicate. Manual review classified 19 pairs as possibly the same event and one as probably not the same event; none met a defensible threshold for likely identity. This is a substantive result rather than a pipeline failure: the public PURSUE releases often provide only broad or missing incident metadata, and no additional public information is available to resolve it. Transformer similarity was effective for retrieving comparable sighting narratives, while TF-IDF, NER, location, and cautious date evidence helped reveal when semantic similarity represented a shared event type rather than one historical occurrence.
 
 ## Data Interpretation Notes
 - `pursue_text` in the candidate CSV is a relevant extracted-document snippet when available; otherwise it is a metadata snippet.

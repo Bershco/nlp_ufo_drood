@@ -1,9 +1,9 @@
-suspect,motive_score,opportunity_score,suspicious_language_score,suspicion_score
-Neville Landless,0.294,16.923,0.196,17.413
-John Jasper,0.088,15.462,0.22,15.769
-Rosa Bud,0.133,14.923,0.114,15.169
-Mr. Crisparkle,0.057,12.462,0.143,12.662
-Helena Landless,0.113,8.154,0.225,8.492
-Durdles,0.0,1.538,0.157,1.696
-Dick Datchery,0.0,0.769,0.129,0.898
-Princess Puffer,0.0,0.769,0.0,0.769
+suspect,motive_term_rate_per_1000,suspicious_term_rate_per_1000,chapter_overlap_with_edwin,same_paragraph_count,same_sentence_count,semantic_motive_relevance,semantic_means_relevance,semantic_secret_life_relevance,motive_score,opportunity_score,suspicious_language_score,narrative_relevance_score,suspicion_score
+Neville Landless,2.54,1.524,0.692,20,14,0.376,0.201,0.374,21.038,27.9,24.171,13.229,86.339
+John Jasper,0.638,1.756,0.846,20,12,0.381,0.212,0.442,10.887,28.714,27.997,14.878,82.476
+Rosa Bud,1.225,1.05,0.692,14,9,0.52,0.168,0.354,17.881,21.536,18.549,15.0,72.966
+Mr. Crisparkle,0.504,1.345,0.846,5,4,0.37,0.224,0.347,9.847,15.696,23.148,13.017,61.709
+Helena Landless,0.969,1.939,0.615,5,4,0.377,0.141,0.268,12.577,12.546,22.262,9.952,57.338
+Durdles,0.0,1.679,0.154,0,0,0.225,0.226,0.308,3.143,1.05,24.912,9.429,38.534
+Dick Datchery,0.0,1.517,0.077,0,0,0.238,0.167,0.239,3.492,0.0,19.509,7.161,30.161
+Princess Puffer,0.0,0.0,0.077,0,0,0.111,0.054,0.117,0.0,0.0,0.0,0.0,0.0

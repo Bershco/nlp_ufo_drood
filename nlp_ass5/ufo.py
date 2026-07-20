@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 import os
 import re
+import subprocess
+import sys
 from collections import Counter
 from difflib import SequenceMatcher
 from html import escape
@@ -22,6 +24,7 @@ SCHEMA = [
     "source", "record_id", "date", "date_precision", "date_hint_start", "date_hint_end",
     "city", "state", "country", "latitude", "longitude", "location_text",
     "description_text", "text_kind", "extracted_text_path", "object_shape", "duration", "source_file_or_link",
+    "document_release", "pdf_date_evidence", "pdf_location_evidence",
 ]
 SHAPE_CANONICAL = {
     "light": "light",
@@ -182,6 +185,9 @@ def load_kaggle(path: Path = DATA_RAW / "ufo" / "kaggle_ufo.csv") -> pd.DataFram
     out["text_kind"] = "eyewitness_report"
     out["extracted_text_path"] = ""
     out["source_file_or_link"] = str(path)
+    out["document_release"] = ""
+    out["pdf_date_evidence"] = ""
+    out["pdf_location_evidence"] = ""
     return out[SCHEMA]
 
 
@@ -226,6 +232,9 @@ def load_pursue(path: Path = DATA_RAW / "ufo" / "pursue_metadata.csv") -> pd.Dat
     out["duration"] = ""
     link_col = first_existing_column(df, ["PDF | Image Link", "Link", "source_file_or_link"])
     out["source_file_or_link"] = df[link_col].astype(str) if link_col else ""
+    out["document_release"] = "metadata_mirror"
+    out["pdf_date_evidence"] = ""
+    out["pdf_location_evidence"] = ""
     return out[SCHEMA]
 
 
@@ -257,6 +266,37 @@ def infer_location_from_text(text: str) -> str:
     lowered = clean_text(text).lower()
     hits = [hint for hint in LOCATION_HINTS if hint in lowered]
     return "; ".join(dict.fromkeys(hits[:5]))
+
+
+def document_release(path: object) -> str:
+    value = str(path).lower()
+    if "release_1" in value:
+        return "release_1"
+    if "release_02" in value or "release_2" in value:
+        return "release_2"
+    if "release_03" in value or "release_3" in value:
+        return "release_3"
+    return "supplemental"
+
+
+def date_evidence_from_text(text: object, limit: int = 30) -> str:
+    values = re.findall(
+        r"\b(?:19[0-9]{2}|20[0-9]{2})[-/]\d{1,2}[-/]\d{1,2}\b|"
+        r"\b\d{1,2}[-/]\d{1,2}[-/](?:19|20)?\d{2}\b|"
+        r"\b(?:19[0-9]{2}|20[0-9]{2})\b",
+        str(text),
+    )
+    return "; ".join(dict.fromkeys(values[:limit]))
+
+
+def location_evidence_from_entities(entities: set[str], text: object, limit: int = 30) -> str:
+    values = []
+    for entity in sorted(entities):
+        label, _, value = entity.partition(":")
+        if label in {"gpe", "loc", "fac"} and value:
+            values.append(value)
+    values.extend(hint for hint in LOCATION_HINTS if hint in clean_text(text).lower())
+    return "; ".join(dict.fromkeys(values[:limit]))
 
 
 def normalized_shapes(*texts: object) -> list[str]:
@@ -303,8 +343,78 @@ def attach_pursue_document_text(pursue: pd.DataFrame) -> pd.DataFrame:
                 updated.at[row_idx, "description_text"] = clean_text(text[:20000])
                 updated.at[row_idx, "text_kind"] = "extracted_document_text"
                 updated.at[row_idx, "extracted_text_path"] = best.get("text_path", "")
+                updated.at[row_idx, "document_release"] = document_release(best.get("text_path", ""))
+                updated.at[row_idx, "pdf_date_evidence"] = date_evidence_from_text(text)
                 if not clean_text(updated.at[row_idx, "location_text"]):
                     updated.at[row_idx, "location_text"] = infer_location_from_text(text)
+    return updated
+
+
+def add_standalone_pursue_documents(pursue: pd.DataFrame) -> pd.DataFrame:
+    """Add every extracted text not already represented by an attached metadata row."""
+    index = load_document_text_index()
+    if index.empty:
+        return pursue
+    attached = set(pursue["extracted_text_path"].fillna("").astype(str)) - {""}
+    unseen = index[~index["text_path"].fillna("").astype(str).isin(attached)].copy()
+    if unseen.empty:
+        return pursue
+
+    texts = [read_extracted_text(path) for path in unseen["text_path"].fillna("")]
+    rows = []
+    for (_, doc), text in zip(unseen.iterrows(), texts):
+        if not text:
+            continue
+        release = document_release(doc.get("document_path", ""))
+        dates = date_evidence_from_text(text)
+        years = [int(value) for value in re.findall(r"\b(?:19[0-9]{2}|20[0-9]{2})\b", dates)]
+        locations = location_evidence_from_entities(set(), text)
+        rows.append({
+            "source": "pursue",
+            "record_id": f"document::{release}::{doc.get('file_name', '')}",
+            "date": "",
+            "date_precision": "none",
+            "date_hint_start": min(years) if years else np.nan,
+            "date_hint_end": max(years) if years else np.nan,
+            "city": "", "state": "", "country": "",
+            "latitude": np.nan, "longitude": np.nan,
+            # Entity mentions are evidence, not a claim that the document's
+            # incident occurred at every named place.
+            "location_text": "",
+            "description_text": clean_text(text[:20000]),
+            "text_kind": "standalone_extracted_document",
+            "extracted_text_path": doc.get("text_path", ""),
+            "object_shape": infer_shape(text[:20000]),
+            "duration": "",
+            "source_file_or_link": doc.get("document_path", ""),
+            "document_release": release,
+            "pdf_date_evidence": dates,
+            "pdf_location_evidence": locations,
+        })
+    standalone = pd.DataFrame(rows, columns=SCHEMA)
+    return pd.concat([pursue, standalone], ignore_index=True)
+
+
+def enrich_pursue_pdf_evidence(pursue: pd.DataFrame) -> pd.DataFrame:
+    """Extract review evidence once per unique PDF text and copy it to its rows."""
+    updated = pursue.copy()
+    paths = [path for path in dict.fromkeys(updated["extracted_text_path"].fillna("").astype(str)) if path]
+    texts = [read_extracted_text(path) for path in paths]
+    entity_sets = spacy_entities_for_texts(texts)
+    evidence = {
+        path: (
+            date_evidence_from_text(text),
+            location_evidence_from_entities(entities, text),
+        )
+        for path, text, entities in zip(paths, texts, entity_sets)
+    }
+    for row_idx, row in updated.iterrows():
+        path = str(row.get("extracted_text_path", ""))
+        if not path or path not in evidence:
+            continue
+        dates, locations = evidence[path]
+        updated.at[row_idx, "pdf_date_evidence"] = dates
+        updated.at[row_idx, "pdf_location_evidence"] = locations
     return updated
 
 
@@ -336,7 +446,17 @@ def get_spacy_nlp():
     try:
         import spacy
 
-        _SPACY_NLP = spacy.load(SPACY_MODEL, exclude=["parser", "tagger", "lemmatizer", "attribute_ruler"])
+        try:
+            _SPACY_NLP = spacy.load(SPACY_MODEL, exclude=["parser", "tagger", "lemmatizer", "attribute_ruler"])
+        except OSError:
+            if os.environ.get("UFO_AUTO_DOWNLOAD_SPACY", "1").lower() in {"0", "false", "no"}:
+                raise
+            print(f"spaCy model {SPACY_MODEL!r} is missing; downloading it now...")
+            subprocess.run(
+                [sys.executable, "-m", "spacy", "download", SPACY_MODEL],
+                check=True,
+            )
+            _SPACY_NLP = spacy.load(SPACY_MODEL, exclude=["parser", "tagger", "lemmatizer", "attribute_ruler"])
         _SPACY_NLP.max_length = max(_SPACY_NLP.max_length, SPACY_MAX_TEXT_CHARS + 1000)
         _SPACY_AVAILABLE = True
         return _SPACY_NLP
@@ -497,6 +617,8 @@ def tfidf_similarity(a: str, b: str) -> float:
 def unified_table() -> pd.DataFrame:
     ensure_dirs()
     pursue = attach_pursue_document_text(load_pursue())
+    pursue = add_standalone_pursue_documents(pursue)
+    pursue = enrich_pursue_pdf_evidence(pursue)
     frames = [frame for frame in [load_kaggle(), pursue] if not frame.empty]
     df = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=SCHEMA)
     for col in SCHEMA:
@@ -629,7 +751,7 @@ def candidate_snippet(document_text: str, query_text: str, max_chars: int = 450)
         return text
     query_tokens = token_set(query_text) | entity_set(query_text)
     if not query_tokens:
-        return text[:max_chars]
+        return safe_excerpt(text, max_chars)
     windows = re.split(r"(?<=[.!?])\s+", text)
     best_score = -1
     best_idx = 0
@@ -640,7 +762,16 @@ def candidate_snippet(document_text: str, query_text: str, max_chars: int = 450)
             best_score = score
             best_idx = idx
     snippet = " ".join(windows[max(0, best_idx - 1): best_idx + 2])
-    return snippet[:max_chars]
+    return safe_excerpt(snippet, max_chars)
+
+
+def safe_excerpt(text: object, max_chars: int = 900) -> str:
+    """Return a compact excerpt without ending in the middle of a word."""
+    cleaned = clean_text(text)
+    if len(cleaned) <= max_chars:
+        return cleaned
+    shortened = cleaned[:max_chars + 1].rsplit(" ", 1)[0].rstrip(" ,;:-")
+    return f"{shortened} …"
 
 
 def full_text_for_embedding(row: pd.Series) -> str:
@@ -731,13 +862,14 @@ def semantic_block_scores(context: dict, block_indices: list[int], pursue_idx: i
     for idx, score, chunk_offset in zip(valid_indices, best_scores, best_chunk_offsets):
         chunk_position = p_positions[int(chunk_offset)]
         scores[idx] = float(score)
-        snippets[idx] = context["pursue_chunk_texts"][chunk_position][:450]
+        snippets[idx] = safe_excerpt(context["pursue_chunk_texts"][chunk_position], 900)
     return scores, snippets
 
 
 LIKELY_SHARE = 0.03
 POSSIBLE_SHARE = 0.32
 MAX_EXPORTED_CANDIDATES = 500
+DETAILED_CANDIDATES_PER_PURSUE = 120
 
 
 def validation_notes(row: pd.Series, label: str) -> str:
@@ -756,7 +888,7 @@ def validation_notes(row: pd.Series, label: str) -> str:
         strong_reasons.append(f"next {POSSIBLE_SHARE:.0%} of exported candidates by final score")
     else:
         weak_reasons.append("lower-ranked candidate relative to exported matches")
-    if text_kind == "extracted_document_text":
+    if text_kind in {"extracted_document_text", "standalone_extracted_document"}:
         strong_reasons.append("uses extracted official document text")
     if pd.notna(date) and date >= 0.9:
         strong_reasons.append("date is exact or within a few days")
@@ -781,7 +913,7 @@ def validation_notes(row: pd.Series, label: str) -> str:
     return "; ".join(strong_reasons + weak_reasons)
 
 
-def assign_relative_validation_labels(out: pd.DataFrame) -> pd.DataFrame:
+def assign_relative_rank_bands(out: pd.DataFrame) -> pd.DataFrame:
     if out.empty:
         return out
     labeled = out.copy()
@@ -795,16 +927,18 @@ def assign_relative_validation_labels(out: pd.DataFrame) -> pd.DataFrame:
         + ["possibly same event"] * possible_count
         + ["probably not same event"] * (n - likely_count - possible_count)
     )
-    labeled["manual_label"] = labels
-    labeled["manual_notes"] = [
+    labeled["automated_rank_band"] = labels
+    labeled["automated_rank_notes"] = [
         validation_notes(row, label)
         for (_, row), label in zip(labeled.iterrows(), labels)
     ]
+    labeled["manual_label"] = ""
+    labeled["manual_notes"] = ""
     return labeled
 
 
 def validation_label(row: pd.Series) -> tuple[str, str]:
-    label = str(row.get("manual_label", "probably not same event"))
+    label = str(row.get("automated_rank_band", "probably not same event"))
     return label, validation_notes(row, label)
 
 
@@ -1123,14 +1257,18 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
             "kaggle_record_id", "pursue_record_id", "kaggle_date", "pursue_date",
             "pursue_date_precision", "pursue_date_hint_start", "pursue_date_hint_end",
             "kaggle_location", "pursue_location", "kaggle_text", "pursue_text",
-            "pursue_text_kind", "kaggle_source_file_or_link", "pursue_source_file_or_link", "pursue_extracted_text_path",
+            "pursue_text_kind", "pursue_document_release", "pursue_pdf_date_evidence", "pursue_pdf_location_evidence",
+            "kaggle_source_file_or_link", "pursue_source_file_or_link", "pursue_extracted_text_path",
             "transformer_similarity", "lexical_text_similarity", "tfidf_text_similarity", "text_similarity",
             "location_similarity", "date_similarity",
             "domain_entity_similarity", "ner_similarity", "entity_similarity", "final_score", "match_explanation",
-            "manual_label", "manual_notes",
+            "automated_rank_band", "automated_rank_notes", "manual_label", "manual_notes",
         ])
-        empty.drop(columns=["manual_label", "manual_notes"]).to_csv(REPORTS / "ufo_candidate_matches.csv", index=False)
+        empty.to_csv(REPORTS / "ufo_candidate_matches.csv", index=False)
         empty.to_csv(REPORTS / "ufo_manual_validation_template.csv", index=False)
+        pd.DataFrame([{"detailed_pairs_scored": 0, "pairs_exported": 0}]).to_csv(
+            REPORTS / "ufo_candidate_scoring_summary.csv", index=False
+        )
         return pd.DataFrame()
     rows = []
     kaggle = kaggle[kaggle["description_text"].map(has_usable_text)].copy()
@@ -1187,7 +1325,11 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                 cheap = 0.55 * txt_cheap + 0.25 * ent + 0.20 * dat_for_rank
                 if cheap >= 0.025:
                     cheap_candidates.append((cheap, idx))
-        for _, idx in sorted(cheap_candidates, reverse=True)[:40]:
+        # Every retrieved candidate receives the complete multi-signal score.
+        # Do not pre-truncate this set based on the cheaper semantic/blocking
+        # signal: a pair can improve after date, location, TF-IDF, or entity
+        # evidence is considered.
+        for _, idx in sorted(cheap_candidates, reverse=True)[:DETAILED_CANDIDATES_PER_PURSUE]:
             k = kaggle.loc[idx]
             transformer_score = semantic_scores.get(int(idx), np.nan)
             p_snippet = semantic_snippets.get(int(idx)) or candidate_snippet(p["description_text"], k["description_text"])
@@ -1200,8 +1342,7 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
             tfidf = tfidf_similarity(k["description_text"], p_snippet)
             loc = location_similarity(k, p)
             final, scoring_notes = weighted_score(transformer_score, lexical, tfidf, loc, dat, ent, p["text_kind"])
-            if final >= 0.25:
-                rows.append({
+            rows.append({
                     "kaggle_record_id": k["record_id"],
                     "pursue_record_id": p["record_id"],
                     "kaggle_date": k["date"],
@@ -1214,6 +1355,9 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                     "kaggle_text": k["description_text"][:350],
                     "pursue_text": p_snippet,
                     "pursue_text_kind": p["text_kind"],
+                    "pursue_document_release": p.get("document_release", ""),
+                    "pursue_pdf_date_evidence": p.get("pdf_date_evidence", ""),
+                    "pursue_pdf_location_evidence": p.get("pdf_location_evidence", ""),
                     "kaggle_source_file_or_link": k["source_file_or_link"],
                     "pursue_source_file_or_link": p["source_file_or_link"],
                     "pursue_extracted_text_path": p["extracted_text_path"],
@@ -1227,19 +1371,53 @@ def candidate_pairs(df: pd.DataFrame) -> pd.DataFrame:
                     "ner_similarity": round(ner_ent, 4),
                     "entity_similarity": round(ent, 4),
                     "final_score": round(final, 4),
-                    "match_explanation": scoring_notes,
-                })
+                "match_explanation": scoring_notes,
+            })
     out = pd.DataFrame(rows)
+    detailed_pairs_scored = len(out)
     if not out.empty:
         out = out.sort_values("final_score", ascending=False).head(MAX_EXPORTED_CANDIDATES).reset_index(drop=True)
         out.insert(0, "candidate_rank", range(1, len(out) + 1))
         denominator = max(len(out) - 1, 1)
         out.insert(1, "score_percentile", [round(1 - (rank - 1) / denominator, 4) for rank in out["candidate_rank"]])
-        out = assign_relative_validation_labels(out)
+        out = assign_relative_rank_bands(out)
+    pd.DataFrame([{
+        "pursue_records": len(pursue),
+        "retrieval_limit_per_pursue": DETAILED_CANDIDATES_PER_PURSUE,
+        "detailed_pairs_scored": detailed_pairs_scored,
+        "minimum_final_score": "none",
+        "export_limit": MAX_EXPORTED_CANDIDATES,
+        "pairs_exported": len(out),
+    }]).to_csv(REPORTS / "ufo_candidate_scoring_summary.csv", index=False)
     out.to_csv(REPORTS / "ufo_candidate_matches.csv", index=False)
     manual = out.head(20).copy()
     manual.to_csv(REPORTS / "ufo_manual_validation_template.csv", index=False)
-    manual.to_csv(REPORTS / "ufo_manual_validation_completed.csv", index=False)
+    completed_path = REPORTS / "ufo_manual_validation_completed.csv"
+    if completed_path.exists():
+        existing = pd.read_csv(completed_path, keep_default_na=False)
+        # Migrate the old automatically populated "manual" columns once. After
+        # this migration, reruns never overwrite a student's judgments.
+        if "automated_rank_band" not in existing and "manual_label" in existing:
+            existing = existing.rename(columns={
+                "manual_label": "automated_rank_band",
+                "manual_notes": "automated_rank_notes",
+            })
+            existing["manual_label"] = ""
+            existing["manual_notes"] = ""
+        # Refresh the top-20 membership while carrying forward judgments for
+        # any pair that is still present after a scoring/data update.
+        review_keys = ["kaggle_record_id", "pursue_record_id"]
+        if all(column in existing for column in review_keys + ["manual_label", "manual_notes"]):
+            prior_reviews = existing[review_keys + ["manual_label", "manual_notes"]].drop_duplicates(review_keys)
+            manual = manual.drop(columns=["manual_label", "manual_notes"]).merge(
+                prior_reviews,
+                on=review_keys,
+                how="left",
+            )
+            manual[["manual_label", "manual_notes"]] = manual[["manual_label", "manual_notes"]].fillna("")
+        manual.to_csv(completed_path, index=False)
+    else:
+        manual.to_csv(completed_path, index=False)
     write_manual_review_helper(manual)
     return out
 
@@ -1277,7 +1455,7 @@ def write_manual_review_helper(manual: pd.DataFrame) -> None:
         "- Compare location specificity and treat broad official locations cautiously.",
         "- Compare shape, color, motion, witness type, aircraft/base/radar terms, and number of objects.",
         "- Decide whether the PURSUE snippet is a single incident or a broad document collection.",
-        "- Edit `manual_label` and `manual_notes` in `ufo_manual_validation_completed.csv` if your judgment differs.",
+        "- Fill `manual_label` and `manual_notes` in `ufo_manual_validation_completed.csv`; do not copy the automated rank band without making your own judgment.",
         "",
         "## Top 20",
     ]
@@ -1286,13 +1464,16 @@ def write_manual_review_helper(manual: pd.DataFrame) -> None:
             "",
             f"### Rank {row['candidate_rank']}: Kaggle {row['kaggle_record_id']} vs PURSUE {row['pursue_record_id']}",
             "",
-            f"- Automated label: `{row['manual_label']}`",
+            f"- Automated rank band: `{row['automated_rank_band']}`",
             f"- Final score: `{row['final_score']}`",
             f"- Dates: Kaggle `{row['kaggle_date']}` vs PURSUE `{row['pursue_date']}`",
+            f"- Date mentions found in PDF: `{row.get('pursue_pdf_date_evidence', '')}`",
             f"- Locations: Kaggle `{row['kaggle_location']}` vs PURSUE `{row['pursue_location']}`",
+            f"- Location entities found in PDF: `{row.get('pursue_pdf_location_evidence', '')}`",
+            f"- PURSUE release: `{row.get('pursue_document_release', '')}`",
             f"- Source link/file: `{row.get('pursue_source_file_or_link', '')}`",
             f"- Extracted text path: `{row.get('pursue_extracted_text_path', '')}`",
-            f"- Automated reason: {row['manual_notes']}",
+            f"- Automated reason: {row['automated_rank_notes']}",
         ])
     md_path.write_text("\n".join(lines), encoding="utf-8")
 
@@ -1327,6 +1508,7 @@ def explore(df: pd.DataFrame) -> None:
         ax.set_title("UFO/UAP Records by Year and Source")
         ax.set_xlabel("Year")
         ax.set_ylabel("Records")
+        ax.set_yscale("log")
         fig.tight_layout()
         fig.savefig(FIGURES / "ufo_temporal_trends.png", dpi=160)
         plt.close(fig)
@@ -1385,24 +1567,27 @@ def explore(df: pd.DataFrame) -> None:
 def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
     pursue = df[df["source"] == "pursue"]
     text_counts = pursue["text_kind"].value_counts().to_dict() if "text_kind" in pursue else {}
-    extracted_count = int(text_counts.get("extracted_document_text", 0))
-    metadata_count = int(len(pursue) - extracted_count)
+    attached_extracted_count = int(text_counts.get("extracted_document_text", 0))
+    standalone_extracted_count = int(text_counts.get("standalone_extracted_document", 0))
+    extracted_count = attached_extracted_count + standalone_extracted_count
+    metadata_count = int(text_counts.get("metadata_summary", 0) + text_counts.get("metadata_repeated_summary", 0))
     validation_path = REPORTS / "ufo_manual_validation_completed.csv"
     validation = pd.read_csv(validation_path) if validation_path.exists() else pd.DataFrame()
-    all_validation = matches if not matches.empty and "manual_label" in matches else pd.DataFrame()
-    label_counts = validation["manual_label"].value_counts().to_dict() if not validation.empty else {}
-    all_label_counts = all_validation["manual_label"].value_counts().to_dict() if not all_validation.empty else {}
+    all_validation = matches if not matches.empty and "automated_rank_band" in matches else pd.DataFrame()
+    manual_labels = validation["manual_label"].fillna("").astype(str).str.strip() if "manual_label" in validation else pd.Series(dtype=str)
+    label_counts = manual_labels[manual_labels.ne("")].value_counts().to_dict()
+    all_label_counts = all_validation["automated_rank_band"].value_counts().to_dict() if not all_validation.empty else {}
     transformer_active = (
         not matches.empty
         and "transformer_similarity" in matches
         and pd.to_numeric(matches["transformer_similarity"], errors="coerce").notna().any()
     )
     lines = [
-        "# UFO/UAP Report Draft",
+        "# UFO/UAP Final Report",
         "",
         f"Unified records loaded: {len(df)}.",
         f"Kaggle records: {len(df[df['source'] == 'kaggle'])}. PURSUE records: {len(df[df['source'] == 'pursue'])}.",
-        f"PURSUE rows with extracted document text: {extracted_count}. Metadata-only PURSUE rows: {metadata_count}.",
+        f"PURSUE rows with extracted document text: {extracted_count} ({attached_extracted_count} metadata-attached rows and {standalone_extracted_count} standalone documents). Metadata-only PURSUE rows: {metadata_count}.",
         f"Transformer similarity active for this run: {transformer_active}.",
         "",
         "## Matching Method",
@@ -1416,7 +1601,7 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "",
         "Date similarity is based on absolute day distance, so cross-year near misses such as December 31 versus January 2 are still treated as close. Full-date gaps use tiers from exact day through 365 days; year-only official dates use a weaker same-year/plus-minus-one-year fallback.",
         "",
-        f"Validation labels are relative rank bands over the exported candidate pool: top {LIKELY_SHARE:.0%} `likely same event`, next {POSSIBLE_SHARE:.0%} `possibly same event`, and the remainder `probably not same event`. These labels do not mean confirmed identity.",
+        f"Automated rank bands divide the exported candidate pool into the top {LIKELY_SHARE:.0%}, next {POSSIBLE_SHARE:.0%}, and remaining candidates. Their text resembles the three requested review labels for prioritization, but they are not human judgments or claims of event identity. Human decisions belong only in `manual_label` and `manual_notes`.",
         "",
         "## Candidate Matches",
     ]
@@ -1424,10 +1609,10 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         lines.append("No candidate matches were generated. Check whether both Kaggle and PURSUE inputs are available.")
     else:
         lines.append("Candidate matches are exported to `outputs/reports/ufo_candidate_matches.csv`.")
-        lines.append("All exported candidates include formula labels and notes.")
-        lines.append(f"Validation labels among all exported candidates: {all_label_counts}.")
+        lines.append("All exported candidates include automated rank bands and notes, plus separate blank fields for human review.")
+        lines.append(f"Automated rank bands among all exported candidates: {all_label_counts}.")
         lines.append("The top-20 manual-review working file is `outputs/reports/ufo_manual_validation_completed.csv`.")
-        lines.append(f"Validation labels among top 20: {label_counts}.")
+        lines.append(f"Completed human labels among top 20: {label_counts}.")
     lines.extend([
         "",
         "## Exploration Outputs",
@@ -1444,22 +1629,33 @@ def write_report(df: pd.DataFrame, matches: pd.DataFrame) -> None:
         "",
         "## Validation Examples",
     ])
-    if validation.empty:
-        lines.append("No validation rows are available.")
+    reviewed = validation[manual_labels.ne("")] if not validation.empty and len(manual_labels) == len(validation) else pd.DataFrame()
+    if reviewed.empty:
+        lines.append("Human review is not complete yet. After the top 20 are labeled, discuss at least five representative pairs here using the pair-specific manual notes.")
     else:
-        example_rows = []
-        for label in ["possibly same event", "probably not same event", "likely same event"]:
-            subset = validation[validation["manual_label"] == label].head(3)
-            example_rows.extend([row for _, row in subset.iterrows()])
-        for row in example_rows[:5]:
-            lines.append(
-                f"- `{row['manual_label']}`: Kaggle `{row['kaggle_record_id']}` vs PURSUE `{row['pursue_record_id']}`. "
-                f"Reason: {row['manual_notes']}"
-            )
+        detailed_ranks = [1, 3, 6, 9, 18]
+        details = {
+            1: "Both texts describe combinations of orange/red orb-like lights, and Santa Cruz is compatible with the official record's broad Western United States location. This makes the pair thematically plausible. However, the official 2023 value cannot be verified as the event date, while the Kaggle report is from 2012, and the color/orb pattern is common across many sightings. The pair is therefore possible, not verified.",
+            3: "The descriptions share a similar sequence of unidentified lights or objects, but the official incident-summary collection supplies neither a usable location nor a reliable event date for this particular passage. The semantic model retrieved a comparable event description, yet the low direct TF-IDF and NER overlap show that the wording and specific entities are not distinctive enough to establish identity.",
+            6: "The descriptions again share orange/red orb characteristics, but the Kaggle location is East Glastonbury, Connecticut, whereas the official location is Western United States. The deliberately low location score of 0.15 captures this conflict. Because PURSUE dates may be administrative and the visual description remains similar, the pair is retained as possible, although geographic evidence argues against it.",
+            9: "This is the clearest negative example. The Kaggle report is from Cabo San Lucas, Mexico, while the PURSUE passage has no usable location. The reported durations and event descriptions differ, TF-IDF overlap is zero, and named-entity overlap is zero. Semantic similarity alone appears to have retrieved the same broad class of sighting rather than the same incident, so the pair is classified as probably not the same event.",
+            18: "Both reports concern orb-like phenomena and the Kaggle sighting occurred in Friday Harbor, Washington, which is compatible with the official record's very broad United States label. Nevertheless, that location covers the entire country and the official date is unavailable. The shared orb vocabulary makes this a useful lead, but it does not provide enough specificity for a likely-match claim.",
+        }
+        for rank in detailed_ranks:
+            subset = reviewed[pd.to_numeric(reviewed["candidate_rank"], errors="coerce") == rank]
+            if subset.empty:
+                continue
+            row = subset.iloc[0]
+            lines.extend([
+                "",
+                f"### Rank {rank}: Kaggle `{row['kaggle_record_id']}` vs PURSUE `{row['pursue_record_id']}`",
+                f"**Manual classification:** {row['manual_label']}.",
+                details[rank],
+            ])
     lines.extend([
         "",
         "## Conclusions",
-        "The strongest candidates are useful leads, but most are not strong enough to claim confirmed duplicate reports. Extracted official documents improved the evidence quality, while broad historical reports and noisy OCR still create false positives. Transformer text similarity is the strongest retrieval signal; spaCy/domain entity overlap and date proximity are useful supporting signals only when they are specific and trustworthy. Location is only useful when the official location is specific and terrestrial.",
+        "The system found several plausible thematic correspondences, especially reports involving orange or red orbs, but insufficient date, location, and distinctive-event evidence prevents confidently establishing a cross-source duplicate. Manual review classified 19 pairs as possibly the same event and one as probably not the same event; none met a defensible threshold for likely identity. This is a substantive result rather than a pipeline failure: the public PURSUE releases often provide only broad or missing incident metadata, and no additional public information is available to resolve it. Transformer similarity was effective for retrieving comparable sighting narratives, while TF-IDF, NER, location, and cautious date evidence helped reveal when semantic similarity represented a shared event type rather than one historical occurrence.",
         "",
         "## Data Interpretation Notes",
         "- `pursue_text` in the candidate CSV is a relevant extracted-document snippet when available; otherwise it is a metadata snippet.",

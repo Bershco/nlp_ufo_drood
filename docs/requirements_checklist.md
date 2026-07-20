@@ -19,8 +19,10 @@ Root doc: [README](../README.md)
 - [x] Date score weight reduced because PURSUE dates are not always confidently event dates.
 - [x] Candidate match export implemented.
 - [x] Candidate export includes all required reporting fields plus source pointers for manual inspection.
-- [x] Relative-rank validation labels and notes implemented for all exported candidates, with top-20 review exported.
+- [x] Automated relative-rank bands and notes implemented for all exported candidates, with a separate blank manual-label field in the top-20 review export.
 - [x] Top-20 manual review helper CSV/Markdown exported.
+- [x] Top 20 candidates manually labeled and annotated by the student.
+- [x] At least five manually reviewed candidate pairs discussed in the final report.
 - [x] Visualization hooks implemented.
 - [x] Interactive geographic map exported in addition to static figures.
 - [x] Offline geographic PNG exported for submissions without internet access.
@@ -35,10 +37,13 @@ Root doc: [README](../README.md)
 - [x] Character frequency by chapter.
 - [x] Co-occurrence network export and visualization.
 - [x] Sentiment/theme analysis around characters.
-- [x] Suspect scoring by motive, opportunity, and suspicious language.
-- [x] Important clues table.
-- [x] Comparison hook against at least one earlier Dickens novel.
-- [x] Final markdown report generation.
+- [x] Frequent contextual words near each character exported.
+- [x] Normalized suspect scoring by motive, opportunity, suspicious language, and semantic narrative relevance, with raw features retained.
+- [x] Hybrid embedding/TF-IDF clue retrieval, scene clustering, and audited 12-clue table.
+- [x] Comparison against all six Dickens works listed in the assignment across motifs, sentiment arcs, plot progression, character roles, and network structure.
+- [x] Final theory, confidence, strongest clues, alternatives, and limitations documented.
+- [x] Final markdown and concise submission reports generated.
+- [x] Drood notebook narrative, tables, figures, comparison, and conclusion completed.
 
 ## Submission Artifacts
 
@@ -47,4 +52,8 @@ Root doc: [README](../README.md)
 - [x] At least three visualizations per implemented full pipeline.
 - [x] Summary for student and future assistant.
 - [x] Colab-compatible notebook entry point.
+- [x] UFO notebook narrative includes methods, selected outputs, figures, manual validation, conclusion, and limitations.
 - [x] Contradictions audit created for final consistency review.
+- [x] Combined Colab notebook covers both completed assignments and includes standalone repository setup.
+- [x] UFO/UAP concise report exported as a paginated PDF with three figures.
+- [x] Edwin Drood 2–4 page report exported as a paginated PDF with three figures, ranked suspects, important clues, and Dickens comparison.

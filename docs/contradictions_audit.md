@@ -55,9 +55,9 @@ Scope reviewed: Python scripts in `nlp_ass5/`, repository markdown files in `doc
 ### 1. UFO Manual Validation File Is Generated, Not Truly Manually Reviewed Yet
 
 - Side A: assignment requires manual review of the top 20 candidate matches.
-- Side B: `outputs/reports/ufo_manual_validation_completed.csv` is generated automatically from rank bands and notes; your own human review has not yet been applied.
-- Why it matters: the file name says `completed`, but the current contents are automated starting labels.
-- Current mitigation: `outputs/reports/ufo_top20_manual_review_helper.md` explicitly tells you to edit labels/notes if your judgment differs.
+- Side B: `outputs/reports/ufo_manual_validation_completed.csv` now separates automated rank bands from blank `manual_label` and `manual_notes` fields; your own human review has not yet been applied.
+- Why it matters: the assignment requires actual human judgments, not formula-derived bands.
+- Current mitigation: reruns preserve the working file, and `outputs/reports/ufo_top20_manual_review_helper.md` explicitly tells you to fill the manual fields.
 - Manual decision needed: manually inspect the top 20 and edit `ufo_manual_validation_completed.csv` before final submission.
 
 ### 2. Interactive Map Depends on Internet Tile Loading
@@ -70,13 +70,13 @@ Scope reviewed: Python scripts in `nlp_ass5/`, repository markdown files in `doc
 
 ## Deferred Non-UFO Tension
 
-### Drood Numeric Suspect Ranking Conflicts With Qualitative Clues
+### Drood Numeric Suspect Ranking Versus Qualitative Clues (Resolved)
 
 - Side A: `outputs/reports/drood_report.md` states that Neville Landless is the strongest computational suspect.
 - Side B: `outputs/reports/drood_report.md` also lists 8 clue rows supporting John Jasper and 0 supporting Neville directly in the extracted clue table.
 - Supporting data: `data/processed/drood_suspect_scores.csv` ranks Neville first because opportunity dominates; `data/processed/drood_important_clues.csv` mostly supports Jasper.
 - Why it matters: the final literary conclusion could look incoherent if it says Neville while the strongest displayed textual clues point to Jasper.
-- Status: deferred until the Drood assignment pass.
+- Resolution: suspect features are now normalized into four explicit components. Neville still ranks first on surface textual evidence, while Jasper is a close second. The final report preserves that numeric result but explains why the audited cross-scene clue chain supports Jasper as the main literary suspect and Neville as the conspicuous false suspect. The earlier keyword-only clue table was replaced with hybrid embedding retrieval, TF-IDF/K-means clustering, and source-text auditing.
 
 ## Manual Next Steps
 

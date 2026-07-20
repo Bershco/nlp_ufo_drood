@@ -1,0 +1,169 @@
+work,plot_section,motif,rate_per_1000
+The Mystery of Edwin Drood,opening,secrecy,0.233
+The Mystery of Edwin Drood,opening,guilt_and_crime,0.1
+The Mystery of Edwin Drood,opening,obsession_and_fear,0.266
+The Mystery of Edwin Drood,opening,hidden_past,0.366
+The Mystery of Edwin Drood,opening,identity_and_disguise,0.766
+The Mystery of Edwin Drood,opening,confession_and_exposure,0.233
+The Mystery of Edwin Drood,opening,justice_and_punishment,0.333
+The Mystery of Edwin Drood,opening,emotion,1.132
+The Mystery of Edwin Drood,middle,secrecy,0.333
+The Mystery of Edwin Drood,middle,guilt_and_crime,0.2
+The Mystery of Edwin Drood,middle,obsession_and_fear,0.266
+The Mystery of Edwin Drood,middle,hidden_past,0.5
+The Mystery of Edwin Drood,middle,identity_and_disguise,0.699
+The Mystery of Edwin Drood,middle,confession_and_exposure,0.5
+The Mystery of Edwin Drood,middle,justice_and_punishment,0.167
+The Mystery of Edwin Drood,middle,emotion,1.033
+The Mystery of Edwin Drood,ending,secrecy,0.466
+The Mystery of Edwin Drood,ending,guilt_and_crime,0.733
+The Mystery of Edwin Drood,ending,obsession_and_fear,0.333
+The Mystery of Edwin Drood,ending,hidden_past,0.466
+The Mystery of Edwin Drood,ending,identity_and_disguise,1.599
+The Mystery of Edwin Drood,ending,confession_and_exposure,0.466
+The Mystery of Edwin Drood,ending,justice_and_punishment,0.366
+The Mystery of Edwin Drood,ending,emotion,1.366
+Oliver Twist,opening,secrecy,0.097
+Oliver Twist,opening,guilt_and_crime,0.369
+Oliver Twist,opening,obsession_and_fear,0.466
+Oliver Twist,opening,hidden_past,0.524
+Oliver Twist,opening,identity_and_disguise,0.738
+Oliver Twist,opening,confession_and_exposure,0.252
+Oliver Twist,opening,justice_and_punishment,0.349
+Oliver Twist,opening,emotion,0.699
+Oliver Twist,middle,secrecy,0.291
+Oliver Twist,middle,guilt_and_crime,0.544
+Oliver Twist,middle,obsession_and_fear,0.505
+Oliver Twist,middle,hidden_past,0.854
+Oliver Twist,middle,identity_and_disguise,1.107
+Oliver Twist,middle,confession_and_exposure,0.233
+Oliver Twist,middle,justice_and_punishment,0.33
+Oliver Twist,middle,emotion,1.359
+Oliver Twist,ending,secrecy,0.68
+Oliver Twist,ending,guilt_and_crime,0.563
+Oliver Twist,ending,obsession_and_fear,0.641
+Oliver Twist,ending,hidden_past,0.893
+Oliver Twist,ending,identity_and_disguise,0.874
+Oliver Twist,ending,confession_and_exposure,0.485
+Oliver Twist,ending,justice_and_punishment,0.796
+Oliver Twist,ending,emotion,1.456
+Bleak House,opening,secrecy,0.194
+Bleak House,opening,guilt_and_crime,0.15
+Bleak House,opening,obsession_and_fear,0.141
+Bleak House,opening,hidden_past,0.44
+Bleak House,opening,identity_and_disguise,0.819
+Bleak House,opening,confession_and_exposure,0.264
+Bleak House,opening,justice_and_punishment,0.757
+Bleak House,opening,emotion,1.047
+Bleak House,middle,secrecy,0.387
+Bleak House,middle,guilt_and_crime,0.185
+Bleak House,middle,obsession_and_fear,0.273
+Bleak House,middle,hidden_past,0.361
+Bleak House,middle,identity_and_disguise,0.819
+Bleak House,middle,confession_and_exposure,0.493
+Bleak House,middle,justice_and_punishment,0.519
+Bleak House,middle,emotion,1.443
+Bleak House,ending,secrecy,0.405
+Bleak House,ending,guilt_and_crime,0.502
+Bleak House,ending,obsession_and_fear,0.194
+Bleak House,ending,hidden_past,0.51
+Bleak House,ending,identity_and_disguise,0.933
+Bleak House,ending,confession_and_exposure,0.422
+Bleak House,ending,justice_and_punishment,0.361
+Bleak House,ending,emotion,1.232
+David Copperfield,opening,secrecy,0.16
+David Copperfield,opening,guilt_and_crime,0.328
+David Copperfield,opening,obsession_and_fear,0.222
+David Copperfield,opening,hidden_past,0.532
+David Copperfield,opening,identity_and_disguise,0.923
+David Copperfield,opening,confession_and_exposure,0.257
+David Copperfield,opening,justice_and_punishment,0.275
+David Copperfield,opening,emotion,1.207
+David Copperfield,middle,secrecy,0.24
+David Copperfield,middle,guilt_and_crime,0.204
+David Copperfield,middle,obsession_and_fear,0.204
+David Copperfield,middle,hidden_past,0.594
+David Copperfield,middle,identity_and_disguise,0.736
+David Copperfield,middle,confession_and_exposure,0.319
+David Copperfield,middle,justice_and_punishment,0.515
+David Copperfield,middle,emotion,1.739
+David Copperfield,ending,secrecy,0.355
+David Copperfield,ending,guilt_and_crime,0.222
+David Copperfield,ending,obsession_and_fear,0.284
+David Copperfield,ending,hidden_past,0.807
+David Copperfield,ending,identity_and_disguise,0.63
+David Copperfield,ending,confession_and_exposure,0.355
+David Copperfield,ending,justice_and_punishment,0.319
+David Copperfield,ending,emotion,1.925
+Great Expectations,opening,secrecy,0.341
+Great Expectations,opening,guilt_and_crime,0.919
+Great Expectations,opening,obsession_and_fear,0.17
+Great Expectations,opening,hidden_past,0.289
+Great Expectations,opening,identity_and_disguise,1.192
+Great Expectations,opening,confession_and_exposure,0.323
+Great Expectations,opening,justice_and_punishment,0.289
+Great Expectations,opening,emotion,0.681
+Great Expectations,middle,secrecy,0.221
+Great Expectations,middle,guilt_and_crime,0.545
+Great Expectations,middle,obsession_and_fear,0.238
+Great Expectations,middle,hidden_past,0.528
+Great Expectations,middle,identity_and_disguise,0.63
+Great Expectations,middle,confession_and_exposure,0.221
+Great Expectations,middle,justice_and_punishment,0.323
+Great Expectations,middle,emotion,1.345
+Great Expectations,ending,secrecy,0.562
+Great Expectations,ending,guilt_and_crime,0.545
+Great Expectations,ending,obsession_and_fear,0.289
+Great Expectations,ending,hidden_past,0.528
+Great Expectations,ending,identity_and_disguise,1.243
+Great Expectations,ending,confession_and_exposure,0.306
+Great Expectations,ending,justice_and_punishment,0.596
+Great Expectations,ending,emotion,0.988
+Our Mutual Friend,opening,secrecy,0.248
+Our Mutual Friend,opening,guilt_and_crime,0.248
+Our Mutual Friend,opening,obsession_and_fear,0.124
+Our Mutual Friend,opening,hidden_past,0.448
+Our Mutual Friend,opening,identity_and_disguise,1.39
+Our Mutual Friend,opening,confession_and_exposure,0.267
+Our Mutual Friend,opening,justice_and_punishment,0.381
+Our Mutual Friend,opening,emotion,1.019
+Our Mutual Friend,middle,secrecy,0.562
+Our Mutual Friend,middle,guilt_and_crime,0.352
+Our Mutual Friend,middle,obsession_and_fear,0.314
+Our Mutual Friend,middle,hidden_past,0.457
+Our Mutual Friend,middle,identity_and_disguise,1.152
+Our Mutual Friend,middle,confession_and_exposure,0.314
+Our Mutual Friend,middle,justice_and_punishment,0.295
+Our Mutual Friend,middle,emotion,1.343
+Our Mutual Friend,ending,secrecy,0.324
+Our Mutual Friend,ending,guilt_and_crime,0.152
+Our Mutual Friend,ending,obsession_and_fear,0.238
+Our Mutual Friend,ending,hidden_past,0.314
+Our Mutual Friend,ending,identity_and_disguise,0.943
+Our Mutual Friend,ending,confession_and_exposure,0.429
+Our Mutual Friend,ending,justice_and_punishment,0.352
+Our Mutual Friend,ending,emotion,1.629
+A Tale of Two Cities,opening,secrecy,0.339
+A Tale of Two Cities,opening,guilt_and_crime,0.498
+A Tale of Two Cities,opening,obsession_and_fear,0.204
+A Tale of Two Cities,opening,hidden_past,0.634
+A Tale of Two Cities,opening,identity_and_disguise,0.837
+A Tale of Two Cities,opening,confession_and_exposure,0.249
+A Tale of Two Cities,opening,justice_and_punishment,0.792
+A Tale of Two Cities,opening,emotion,0.905
+A Tale of Two Cities,middle,secrecy,0.634
+A Tale of Two Cities,middle,guilt_and_crime,0.792
+A Tale of Two Cities,middle,obsession_and_fear,0.226
+A Tale of Two Cities,middle,hidden_past,0.498
+A Tale of Two Cities,middle,identity_and_disguise,0.951
+A Tale of Two Cities,middle,confession_and_exposure,0.249
+A Tale of Two Cities,middle,justice_and_punishment,0.226
+A Tale of Two Cities,middle,emotion,1.494
+A Tale of Two Cities,ending,secrecy,0.611
+A Tale of Two Cities,ending,guilt_and_crime,1.2
+A Tale of Two Cities,ending,obsession_and_fear,0.385
+A Tale of Two Cities,ending,hidden_past,0.543
+A Tale of Two Cities,ending,identity_and_disguise,1.222
+A Tale of Two Cities,ending,confession_and_exposure,0.407
+A Tale of Two Cities,ending,justice_and_punishment,0.588
+A Tale of Two Cities,ending,emotion,1.539

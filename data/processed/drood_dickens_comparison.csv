@@ -1,5 +1,57 @@
-motif,drood_rate_per_1000,great_expectations_rate_per_1000
-secrecy,0.359,0.386
-crime,0.348,0.67
-emotion,1.177,1.005
-identity,1.682,1.589
+work,motif,rate_per_1000
+The Mystery of Edwin Drood,secrecy,0.344
+The Mystery of Edwin Drood,guilt_and_crime,0.344
+The Mystery of Edwin Drood,obsession_and_fear,0.289
+The Mystery of Edwin Drood,hidden_past,0.444
+The Mystery of Edwin Drood,identity_and_disguise,1.021
+The Mystery of Edwin Drood,confession_and_exposure,0.4
+The Mystery of Edwin Drood,justice_and_punishment,0.289
+The Mystery of Edwin Drood,emotion,1.177
+Oliver Twist,secrecy,0.356
+Oliver Twist,guilt_and_crime,0.492
+Oliver Twist,obsession_and_fear,0.537
+Oliver Twist,hidden_past,0.757
+Oliver Twist,identity_and_disguise,0.906
+Oliver Twist,confession_and_exposure,0.324
+Oliver Twist,justice_and_punishment,0.492
+Oliver Twist,emotion,1.171
+Bleak House,secrecy,0.329
+Bleak House,guilt_and_crime,0.279
+Bleak House,obsession_and_fear,0.202
+Bleak House,hidden_past,0.437
+Bleak House,identity_and_disguise,0.857
+Bleak House,confession_and_exposure,0.393
+Bleak House,justice_and_punishment,0.546
+Bleak House,emotion,1.241
+David Copperfield,secrecy,0.251
+David Copperfield,guilt_and_crime,0.251
+David Copperfield,obsession_and_fear,0.237
+David Copperfield,hidden_past,0.645
+David Copperfield,identity_and_disguise,0.763
+David Copperfield,confession_and_exposure,0.311
+David Copperfield,justice_and_punishment,0.37
+David Copperfield,emotion,1.624
+Great Expectations,secrecy,0.375
+Great Expectations,guilt_and_crime,0.67
+Great Expectations,obsession_and_fear,0.233
+Great Expectations,hidden_past,0.448
+Great Expectations,identity_and_disguise,1.022
+Great Expectations,confession_and_exposure,0.284
+Great Expectations,justice_and_punishment,0.403
+Great Expectations,emotion,1.005
+Our Mutual Friend,secrecy,0.378
+Our Mutual Friend,guilt_and_crime,0.251
+Our Mutual Friend,obsession_and_fear,0.225
+Our Mutual Friend,hidden_past,0.406
+Our Mutual Friend,identity_and_disguise,1.162
+Our Mutual Friend,confession_and_exposure,0.336
+Our Mutual Friend,justice_and_punishment,0.343
+Our Mutual Friend,emotion,1.33
+A Tale of Two Cities,secrecy,0.528
+A Tale of Two Cities,guilt_and_crime,0.83
+A Tale of Two Cities,obsession_and_fear,0.272
+A Tale of Two Cities,hidden_past,0.558
+A Tale of Two Cities,identity_and_disguise,1.003
+A Tale of Two Cities,confession_and_exposure,0.302
+A Tale of Two Cities,justice_and_punishment,0.536
+A Tale of Two Cities,emotion,1.313

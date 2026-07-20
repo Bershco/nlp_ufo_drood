@@ -1,0 +1,136 @@
+character,rank,context_word,count,rate_per_1000
+Edwin Drood,1,says,19,11.014
+Edwin Drood,2,should,18,10.435
+Edwin Drood,3,young,16,9.275
+Edwin Drood,4,miss,14,8.116
+Edwin Drood,5,might,11,6.377
+Edwin Drood,6,jack,10,5.797
+Edwin Drood,7,little,10,5.797
+Edwin Drood,8,now,10,5.797
+Edwin Drood,9,face,9,5.217
+Edwin Drood,10,time,9,5.217
+Edwin Drood,11,own,8,4.638
+Edwin Drood,12,against,8,4.638
+Edwin Drood,13,eyes,8,4.638
+Edwin Drood,14,other,8,4.638
+Edwin Drood,15,himself,8,4.638
+John Jasper,1,hand,22,7.586
+John Jasper,2,sapsea,17,5.862
+John Jasper,3,himself,16,5.517
+John Jasper,4,says,15,5.172
+John Jasper,5,still,14,4.828
+John Jasper,6,now,14,4.828
+John Jasper,7,nephew,13,4.483
+John Jasper,8,face,13,4.483
+John Jasper,9,know,13,4.483
+John Jasper,10,again,13,4.483
+John Jasper,11,time,13,4.483
+John Jasper,12,down,13,4.483
+John Jasper,13,sir,12,4.138
+John Jasper,14,young,12,4.138
+John Jasper,15,between,12,4.138
+Rosa Bud,1,miss,41,15.185
+Rosa Bud,2,little,31,11.481
+Rosa Bud,3,dear,26,9.63
+Rosa Bud,4,twinkleton,17,6.296
+Rosa Bud,5,being,17,6.296
+Rosa Bud,6,again,15,5.556
+Rosa Bud,7,grewgious,15,5.556
+Rosa Bud,8,tartar,15,5.556
+Rosa Bud,9,don,14,5.185
+Rosa Bud,10,know,13,4.815
+Rosa Bud,11,should,12,4.444
+Rosa Bud,12,came,12,4.444
+Rosa Bud,13,such,11,4.074
+Rosa Bud,14,face,11,4.074
+Rosa Bud,15,head,11,4.074
+Neville Landless,1,minor,18,10.345
+Neville Landless,2,canon,18,10.345
+Neville Landless,3,say,13,7.471
+Neville Landless,4,now,11,6.322
+Neville Landless,5,time,10,5.747
+Neville Landless,6,here,10,5.747
+Neville Landless,7,know,9,5.172
+Neville Landless,8,against,9,5.172
+Neville Landless,9,yet,9,5.172
+Neville Landless,10,hand,9,5.172
+Neville Landless,11,own,9,5.172
+Neville Landless,12,much,9,5.172
+Neville Landless,13,while,9,5.172
+Neville Landless,14,should,8,4.598
+Neville Landless,15,little,8,4.598
+Helena Landless,1,miss,13,14.623
+Helena Landless,2,brother,11,12.373
+Helena Landless,3,should,8,8.999
+Helena Landless,4,face,7,7.874
+Helena Landless,5,friend,7,7.874
+Helena Landless,6,part,6,6.749
+Helena Landless,7,tartar,6,6.749
+Helena Landless,8,again,6,6.749
+Helena Landless,9,two,5,5.624
+Helena Landless,10,day,5,5.624
+Helena Landless,11,here,5,5.624
+Helena Landless,12,between,5,5.624
+Helena Landless,13,little,5,5.624
+Helena Landless,14,spoken,4,4.499
+Helena Landless,15,good,4,4.499
+Mr. Crisparkle,1,face,19,7.006
+Mr. Crisparkle,2,little,18,6.637
+Mr. Crisparkle,3,himself,17,6.268
+Mr. Crisparkle,4,say,14,5.162
+Mr. Crisparkle,5,good,13,4.794
+Mr. Crisparkle,6,own,12,4.425
+Mr. Crisparkle,7,again,12,4.425
+Mr. Crisparkle,8,come,11,4.056
+Mr. Crisparkle,9,young,11,4.056
+Mr. Crisparkle,10,miss,11,4.056
+Mr. Crisparkle,11,hand,11,4.056
+Mr. Crisparkle,12,down,10,3.687
+Mr. Crisparkle,13,now,10,3.687
+Mr. Crisparkle,14,time,10,3.687
+Mr. Crisparkle,15,took,10,3.687
+Durdles,1,says,13,7.403
+Durdles,2,down,13,7.403
+Durdles,3,himself,12,6.834
+Durdles,4,come,11,6.264
+Durdles,5,home,11,6.264
+Durdles,6,sapsea,10,5.695
+Durdles,7,among,10,5.695
+Durdles,8,old,9,5.125
+Durdles,9,don,9,5.125
+Durdles,10,here,8,4.556
+Durdles,11,bundle,8,4.556
+Durdles,12,where,8,4.556
+Durdles,13,work,8,4.556
+Durdles,14,bottle,8,4.556
+Durdles,15,way,7,3.986
+Princess Puffer,1,much,3,107.143
+Princess Puffer,2,royal,2,71.429
+Princess Puffer,3,highness,2,71.429
+Princess Puffer,4,assents,1,35.714
+Princess Puffer,5,deputy,1,35.714
+Princess Puffer,6,shrewd,1,35.714
+Princess Puffer,7,leer,1,35.714
+Princess Puffer,8,recognition,1,35.714
+Princess Puffer,9,smoking,1,35.714
+Princess Puffer,10,imaginary,1,35.714
+Princess Puffer,11,pipe,1,35.714
+Princess Puffer,12,head,1,35.714
+Princess Puffer,13,side,1,35.714
+Princess Puffer,14,eyes,1,35.714
+Princess Puffer,15,places,1,35.714
+Dick Datchery,1,honour,11,18.333
+Dick Datchery,2,mayor,8,13.333
+Dick Datchery,3,gentleman,7,11.667
+Dick Datchery,4,much,7,11.667
+Dick Datchery,5,himself,5,8.333
+Dick Datchery,6,under,5,8.333
+Dick Datchery,7,know,4,6.667
+Dick Datchery,8,tope,4,6.667
+Dick Datchery,9,here,4,6.667
+Dick Datchery,10,hat,4,6.667
+Dick Datchery,11,white,4,6.667
+Dick Datchery,12,hair,4,6.667
+Dick Datchery,13,last,4,6.667
+Dick Datchery,14,arm,4,6.667
+Dick Datchery,15,worshipful,4,6.667
