@@ -18,6 +18,7 @@ REPORTS = ("ufo_submission_report", "drood_submission_report")
 
 
 def inline_markup(value: str) -> str:
+    value = value.replace(chr(8212), ", ")
     value = html.escape(value)
     value = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", value)
     value = re.sub(r"\*(.+?)\*", r"<em>\1</em>", value)
@@ -48,7 +49,11 @@ def markdown_to_html(source: str, asset_dir: Path) -> str:
                 in_list = False
         elif line.startswith("## "):
             flush_paragraph()
-            blocks.append(f"<h2>{inline_markup(line[3:])}</h2>")
+            blocks.append(
+                '<div class="section-heading" style="width:100%; clear:both; display:block; text-align:left; '
+                'margin:14px 0 6px; padding-bottom:3px; border-bottom:1px solid #9bb4c7;">'
+                f'<span style="font-size:16px; font-weight:bold; color:#245678;">{inline_markup(line[3:])}</span></div>'
+            )
         elif line.startswith("# "):
             flush_paragraph()
             blocks.append(f"<h1>{inline_markup(line[2:])}</h1>")
@@ -59,8 +64,8 @@ def markdown_to_html(source: str, asset_dir: Path) -> str:
                 pixel_width, pixel_height = figure.size
             display_width = 624
             display_height = round(display_width * pixel_height / pixel_width)
-            if display_height > 230:
-                display_height = 230
+            if display_height > 260:
+                display_height = 260
                 display_width = round(display_height * pixel_width / pixel_height)
             blocks.append(
                 f'<div class="chart"><img src="{source_image.as_uri()}" width="{display_width}" height="{display_height}" '
@@ -110,11 +115,13 @@ def render(name: str, soffice: str) -> None:
 <html><head><meta charset="utf-8"><style>
 @page {{ size: A4; margin: 13mm 15mm; }}
 html, body {{ direction: ltr; }}
-body {{ font-family: Arial, sans-serif; font-size: 9.2pt; line-height: 1.14;
+body {{ font-family: Arial, sans-serif; font-size: 9pt; line-height: 1.12;
         color: #20242a; max-width: 180mm; margin: auto; text-align: left; }}
 h1 {{ font-size: 18pt; color: #18354f; margin: 0 0 5mm; clear: both; display: block; text-align: left; }}
 h2 {{ font-size: 12.5pt; color: #245678; margin: 4mm 0 1.5mm;
       border-bottom: 0.4pt solid #9bb4c7; clear: both; display: block; text-align: left; }}
+.section-heading {{ width: 100%; margin: 4mm 0 1.5mm; padding: 0 0 1mm; border-bottom: 0.4pt solid #9bb4c7; clear: both; display: block; text-align: left; }}
+.section-heading span {{ font-family: Arial, sans-serif; font-size: 12.5pt; font-weight: bold; color: #245678; }}
 p {{ margin: 0 0 2.2mm; text-align: left; clear: both; }}
 ol {{ margin: 0 0 2mm 6mm; padding-left: 4mm; }}
 li {{ margin-bottom: 1mm; }}

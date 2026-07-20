@@ -284,7 +284,7 @@ def extract_clues(df: pd.DataFrame, top_n: int = 12) -> pd.DataFrame:
         ("dreadful suspicion of Jasper", "behavior_after_disappearance", "John Jasper; Rosa Bud", "The narration explicitly records Rosa's suspicion of Jasper and connects it with his obsessive inquiry and torn, muddy clothes."),
         ("determined reticence of Jasper", "behavior_after_disappearance", "John Jasper; Mr. Crisparkle", "Jasper becomes isolated, secretive, and fixed on one purpose after the disappearance."),
         ("convinced of Neville’s innocence", "Neville_as_false_suspect", "Neville Landless; Mr. Crisparkle", "Crisparkle believes Neville innocent even while acknowledging that circumstantial evidence makes him look guilty."),
-        ("traces of blood on him", "Neville_as_false_suspect", "Neville Landless", "The case against Neville is conspicuous circumstantial evidence—threat, weapon, departure, and blood—which fits an intentionally obvious suspect."),
+        ("traces of blood on him", "Neville_as_false_suspect", "Neville Landless", "The case against Neville is conspicuous circumstantial evidence: threat, weapon, departure, and blood. This fits an intentionally obvious suspect."),
         ("young gentleman’s name", "survival_and_disguise", "Dick Datchery; Edwin Drood; Princess Puffer", "Datchery reacts strongly while investigating Edwin's Christmas Eve movements, supporting a concealed-investigator or disguise theory, though not proving Edwin survived."),
     ]
     selected = []
@@ -361,23 +361,69 @@ def make_visuals(freq: pd.DataFrame, by_chapter: pd.DataFrame, cooc: pd.DataFram
     ax.set_xlabel("Suspect"); ax.set_ylabel("Weighted score (0–100 total)")
     ax.legend(["Motive (25)", "Opportunity (30)", "Suspicious language (30)", "Narrative relevance (15)"], fontsize=8)
     fig.tight_layout(); fig.savefig(FIGURES / "drood_suspect_scores.png", dpi=300); plt.close(fig)
+
+    score_order = ["Neville Landless", "John Jasper", "Rosa Bud", "Mr. Crisparkle", "Helena Landless", "Durdles", "Dick Datchery", "Princess Puffer"]
+    short_names = ["Neville", "Jasper", "Rosa", "Crisparkle", "Helena", "Durdles", "Datchery", "Puffer"]
+    score_rows = [
+        ("Motive (25)", "motive_score"),
+        ("Opportunity (30)", "opportunity_score"),
+        ("Suspicious language (30)", "suspicious_language_score"),
+        ("Narrative relevance (15)", "narrative_relevance_score"),
+        ("Total (100)", "suspicion_score"),
+    ]
+    score_lookup = suspects.set_index("suspect").reindex(score_order)
+    cell_text = [[f"{score_lookup.loc[name, column]:.1f}" for name in score_order] for _, column in score_rows]
+    fig, ax = plt.subplots(figsize=(13, 3.4))
+    ax.axis("off")
+    table = ax.table(
+        cellText=cell_text,
+        rowLabels=[label for label, _ in score_rows],
+        colLabels=short_names,
+        cellLoc="center",
+        rowLoc="left",
+        loc="center",
+        bbox=[0.15, 0.02, 0.84, 0.92],
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    for (row, column), cell in table.get_celld().items():
+        cell.set_edgecolor("#9bb4c7")
+        cell.set_linewidth(0.8)
+        if row == 0:
+            cell.set_facecolor("#244f70")
+            cell.get_text().set_color("white")
+            cell.get_text().set_weight("bold")
+        elif row == len(score_rows):
+            cell.set_facecolor("#dce9f2")
+            cell.get_text().set_weight("bold")
+        elif row % 2 == 0:
+            cell.set_facecolor("#f2f6f9")
+        if column == -1:
+            cell.set_facecolor("#e7eff5" if row != len(score_rows) else "#cbdde9")
+            cell.get_text().set_weight("bold")
+    fig.suptitle("Suspect Scores by Evidence Component", fontsize=13, fontweight="bold", color="#18354f", y=0.99)
+    fig.savefig(FIGURES / "drood_suspect_score_table.png", dpi=300, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
     save_bar(sentiment, "character", "suspicious_rate", "Suspicious Language Rate Around Characters", FIGURES / "drood_suspicious_language.png")
 
     if not cooc.empty:
         graph = nx.Graph()
         for _, row in cooc.iterrows():
             graph.add_edge(row["character_a"], row["character_b"], weight=row["weight"])
-        fig, ax = plt.subplots(figsize=(8, 6))
-        pos = nx.spring_layout(graph, seed=7, k=1.35, iterations=200)
+        fig, ax = plt.subplots(figsize=(10, 7))
+        pos = nx.circular_layout(graph, scale=1.0)
         raw_weights = [graph[u][v]["weight"] for u, v in graph.edges]
         max_weight = max(raw_weights, default=1)
-        weights = [0.8 + 5.2 * math.sqrt(weight / max_weight) for weight in raw_weights]
-        nx.draw_networkx_nodes(graph, pos=pos, ax=ax, node_color="#9ecae1", node_size=1250, edgecolors="#39789f")
-        nx.draw_networkx_edges(graph, pos=pos, ax=ax, width=weights, edge_color="#777", alpha=0.65)
-        nx.draw_networkx_labels(graph, pos=pos, ax=ax, font_size=8, bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.72, "pad": 0.4})
+        weights = [0.7 + 4.0 * math.sqrt(weight / max_weight) for weight in raw_weights]
+        node_colors = ["#d95f59" if name == "John Jasper" else "#f1c75b" if name == "Edwin Drood" else "#efad66" if name == "Neville Landless" else "#9ecae1" for name in graph.nodes]
+        node_sizes = [1800 if name in {"John Jasper", "Edwin Drood", "Neville Landless"} else 1350 for name in graph.nodes]
+        nx.draw_networkx_edges(graph, pos=pos, ax=ax, width=weights, edge_color="#71808c", alpha=0.52)
+        nx.draw_networkx_nodes(graph, pos=pos, ax=ax, node_color=node_colors, node_size=node_sizes, edgecolors="#315d78", linewidths=1.2)
+        nx.draw_networkx_labels(graph, pos=pos, ax=ax, font_size=9, font_weight="bold", bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.78, "pad": 0.5})
         ax.set_title("Character Co-occurrence Network")
+        ax.margins(0.16)
         ax.axis("off")
-        fig.tight_layout()
+        fig.tight_layout(pad=1.2)
         fig.savefig(FIGURES / "drood_cooccurrence_network.png", dpi=300)
         plt.close(fig)
 

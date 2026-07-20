@@ -6,19 +6,11 @@ The Project Gutenberg text was stripped of boilerplate and divided into 23 chapt
 
 Suspects were scored on four normalized components: motive (25 points), opportunity (30), suspicious language (30), and semantic narrative relevance (15). Sentence embeddings retrieved clue candidates for motive, means, opium/double life, behavior after the disappearance, survival/disguise, and the Neville false-suspect theory. TF-IDF/K-means clustered scenes, and twelve final passages were audited against the source text.
 
-![Suspect score components](../figures/drood_suspect_scores.png)
-
 ## Suspects and clues
 
-| Score component | Neville | Jasper | Rosa | Crisparkle | Helena | Durdles | Datchery | Puffer |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Motive (25) | 21.0 | 10.9 | 17.9 | 9.8 | 12.6 | 3.1 | 3.5 | 0.0 |
-| Opportunity (30) | 27.9 | 28.7 | 21.5 | 15.7 | 12.5 | 1.0 | 0.0 | 0.0 |
-| Suspicious language (30) | 24.2 | 28.0 | 18.5 | 23.1 | 22.3 | 24.9 | 19.5 | 0.0 |
-| Narrative relevance (15) | 13.2 | 14.9 | 15.0 | 13.0 | 10.0 | 9.4 | 7.2 | 0.0 |
-| **Total (100)** | **86.3** | **82.5** | **73.0** | **61.7** | **57.3** | **38.5** | **30.2** | **0.0** |
+![Suspect score breakdown](../figures/drood_suspect_score_table.png)
 
-**Interpretive finding: John Jasper—not Neville Landless—is the primary suspect.** The 3.9-point numerical gap is small, and Jasper leads Neville in opportunity, suspicious language, and narrative relevance. Neville wins the total only because the novel surrounds its conspicuous suspect with unusually explicit jealousy and conflict vocabulary. Jasper's evidence is less overt but forms a stronger cross-scene sequence of motive, preparation, possible means, concealment, and behavior after Edwin disappears.
+**Interpretive finding: John Jasper, not Neville Landless, is the primary suspect.** The 3.9-point numerical gap is small, and Jasper leads Neville in opportunity, suspicious language, and narrative relevance. Neville wins the total only because the novel surrounds its conspicuous suspect with unusually explicit jealousy and conflict vocabulary. Jasper's evidence is less overt but forms a stronger cross-scene sequence of motive, preparation, possible means, concealment, and behavior after Edwin disappears.
 
 The audited clue chain supporting **Jasper** is:
 
@@ -44,6 +36,8 @@ In *Drood*, crime language rises from 0.101 per 1,000 words in the opening third
 These patterns do not prove a solution, but they support two inferences: Neville's overt guilt signals may be misdirection, and the late identity/disguise increase leaves room for Edwin's survival or a Datchery-centered revelation.
 
 ![Motif comparison](../figures/drood_dickens_motifs.png)
+
+![Suspect score components](../figures/drood_suspect_scores.png)
 
 ## Conclusion
 

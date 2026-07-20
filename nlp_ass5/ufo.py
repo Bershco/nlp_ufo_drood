@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 import os
 import re
@@ -13,6 +14,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon as MapPolygon
 
 from .common import DATA_PROCESSED, DATA_RAW, FIGURES, REPORTS, STOPWORDS, clean_text, ensure_dirs, save_bar, tokenize, top_terms
 from .manual_docs import compact_name
@@ -718,7 +720,35 @@ def write_offline_geo_map(df: pd.DataFrame, path: Path = FIGURES / "ufo_geograph
     ]
     world = sample[~sample.index.isin(us.index)]
 
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5.5))
+    boundary_path = DATA_RAW.parents[1] / "data" / "reference" / "natural_earth_admin0_countries.geojson"
+    boundary_features = []
+    if boundary_path.exists():
+        boundary_features = json.loads(boundary_path.read_text(encoding="utf-8"))["features"]
+
+    def polygon_rings(feature: dict) -> list[list[list[float]]]:
+        geometry = feature.get("geometry") or {}
+        coordinates = geometry.get("coordinates") or []
+        if geometry.get("type") == "Polygon":
+            return coordinates[:1]
+        if geometry.get("type") == "MultiPolygon":
+            return [polygon[0] for polygon in coordinates if polygon]
+        return []
+
+    def draw_land(ax, features: list[dict], edge_color: str, line_width: float) -> None:
+        for feature in features:
+            for ring in polygon_rings(feature):
+                ax.add_patch(MapPolygon(ring, closed=True, facecolor="#f5f1e8", edgecolor=edge_color, linewidth=line_width, zorder=0))
+
+    usa_features = [
+        feature for feature in boundary_features
+        if feature.get("properties", {}).get("ADM0_A3") == "USA"
+        or feature.get("properties", {}).get("ADMIN") == "United States of America"
+    ]
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5.8))
+    for ax in axes:
+        ax.set_facecolor("#eef6fa")
+    draw_land(axes[0], boundary_features, edge_color="#667784", line_width=0.35)
     axes[0].scatter(sample["longitude"], sample["latitude"], s=2, alpha=0.18, color="#2563eb")
     axes[0].set_title("Global UFO/UAP Report Coordinates")
     axes[0].set_xlim(-180, 180)
@@ -730,18 +760,19 @@ def write_offline_geo_map(df: pd.DataFrame, path: Path = FIGURES / "ufo_geograph
     if not world.empty:
         axes[0].scatter(world["longitude"], world["latitude"], s=4, alpha=0.25, color="#dc2626")
 
+    draw_land(axes[1], usa_features, edge_color="#334e5c", line_width=0.75)
     if not us.empty:
         axes[1].scatter(us["longitude"], us["latitude"], s=2, alpha=0.20, color="#047857")
-    axes[1].set_title("United States Detail")
-    axes[1].set_xlim(-126, -66)
-    axes[1].set_ylim(24, 50)
+    axes[1].set_title("United States Detail, Including Alaska and Hawaii")
+    axes[1].set_xlim(-170, -64)
+    axes[1].set_ylim(18, 72)
     axes[1].set_xlabel("Longitude")
     axes[1].set_ylabel("Latitude")
     axes[1].grid(True, linewidth=0.3, alpha=0.35)
 
     fig.suptitle("Offline Geographic View of Kaggle UFO Reports", y=0.98)
     fig.tight_layout()
-    fig.savefig(path, dpi=300)
+    fig.savefig(path, dpi=300, facecolor="white")
     plt.close(fig)
 
 
